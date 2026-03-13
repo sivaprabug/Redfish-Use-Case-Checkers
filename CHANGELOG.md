@@ -1,5 +1,8 @@
 # Change Log
 
+## [2.0.8] - 2026-03-13
+- Corrected version of Tacklebox referenced in setup.py for distribution
+
 ## [2.0.7] - 2025-11-14
 - Modified 'password change required' testing to PATCH a user's password
 
