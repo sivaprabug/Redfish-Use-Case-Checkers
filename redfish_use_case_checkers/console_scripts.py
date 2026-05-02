@@ -14,6 +14,8 @@ Brief : This file contains the definitions and functionalities for invoking
 import argparse
 import colorama
 import logging
+import warnings
+warnings.filterwarnings("ignore", category=Warning, module="requests")
 import redfish
 import sys
 from datetime import datetime
@@ -67,13 +69,13 @@ def main():
     )
     args = argget.parse_args()
 
-    # Create report directory if needed
-    report_dir = Path(args.report_dir)
-    if not report_dir.is_dir():
-        report_dir.mkdir(parents=True)
-
     # Get the current time for report files
     test_time = datetime.now()
+
+    # Create report directory with timestamped subfolder (YYYY-MM-DD-HH-SS)
+    report_dir = Path(args.report_dir) / test_time.strftime("%Y-%m-%d-%H-%S")
+    if not report_dir.is_dir():
+        report_dir.mkdir(parents=True)
 
     # Set the logging level
     log_level = logging.INFO
