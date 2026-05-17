@@ -65,75 +65,90 @@ html_template = """<!DOCTYPE html>
     .header-meta     {{ text-align: right; font-size: .78rem; opacity: .85; line-height: 1.7; }}
     .header-meta a   {{ color: rgba(255,255,255,.7); font-size: .7rem; text-decoration: none; }}
 
-    /* ── Layout ── */
-    .container {{ max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }}
+    /* ── Page layout ── */
+    .page-wrap {{ display: flex; align-items: flex-start; min-height: calc(100vh - 64px); }}
+    .sidebar {{
+      width: 240px;
+      flex-shrink: 0;
+      background: #ffffff;
+      border-right: 1px solid #dde3ec;
+      box-shadow: 2px 0 8px rgba(0,0,0,.05);
+      padding: 1.4rem 1rem 2rem;
+      position: sticky;
+      top: 64px;
+      height: calc(100vh - 64px);
+      overflow-y: auto;
+    }}
+    .main-content {{ flex: 1; padding: 1.5rem; min-width: 0; }}
 
-    /* ── Info cards ── */
-    .info-grid {{
+    /* ── Sidebar section headings ── */
+    .sb-heading {{
+      font-size: .6rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--primary);
+      padding: .3rem .5rem;
+      background: #eef3fa;
+      border-left: 3px solid var(--accent);
+      border-radius: 0 4px 4px 0;
+      margin-bottom: .65rem;
+    }}
+    .sb-stats + .sb-heading {{ margin-top: 1.4rem; }}
+
+    /* ── Sidebar info rows ── */
+    .sb-row {{
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: .5rem;
+      padding: .32rem 0;
+      border-bottom: 1px solid #f0f3f7;
+      font-size: .78rem;
+    }}
+    .sb-row:last-of-type {{ border-bottom: none; }}
+    .sb-key {{
+      color: #64748b;
+      font-size: .67rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }}
+    .sb-val {{
+      font-weight: 600;
+      color: #1e293b;
+      word-break: break-all;
+      text-align: right;
+      font-size: .78rem;
+    }}
+
+    /* ── Sidebar summary stat blocks — 2×2 grid ── */
+    .sb-stats {{
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
+      gap: .5rem;
+      margin-top: .4rem;
     }}
-    @media (max-width: 768px) {{ .info-grid {{ grid-template-columns: 1fr; }} }}
-    .card {{
-      background: var(--card-bg);
-      border: 1px solid var(--border);
+    .sb-stat {{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: .7rem .4rem .55rem;
       border-radius: 8px;
-      padding: 1rem 1.25rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,.06);
-    }}
-    .card-label {{
-      font-size: .67rem;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: var(--text-sub);
-      font-weight: 600;
-      margin-bottom: .2rem;
-    }}
-    .card-value {{ font-size: .9rem; font-weight: 500; word-break: break-all; }}
-    .hw-table {{ border-collapse: collapse; width: 100%; margin-top: .25rem; font-size: .88rem; }}
-    .hw-table tr {{ border-bottom: 1px solid var(--border); }}
-    .hw-table tr:last-child {{ border-bottom: none; }}
-    .hw-key {{ width: 30%; padding: .3rem .4rem .3rem 0; color: var(--text-sub); font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; vertical-align: middle; }}
-    .hw-val {{ padding: .3rem .4rem; font-weight: 500; word-break: break-all; vertical-align: middle; }}
-
-    /* ── Summary counters ── */
-    .summary-grid {{
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }}
-    @media (max-width: 640px) {{ .summary-grid {{ grid-template-columns: repeat(2, 1fr); }} }}
-    .summary-card {{
-      background: var(--card-bg);
-      border-radius: 8px;
-      padding: 1.25rem;
+      font-weight: 700;
+      color: #fff;
       text-align: center;
-      border: 1px solid var(--border);
-      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+      min-height: 66px;
     }}
-    .summary-card .count {{ font-size: 2.25rem; font-weight: 700; line-height: 1; }}
-    .summary-card .label {{
-      font-size: .68rem;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      font-weight: 600;
-      margin-top: .3rem;
-    }}
-    .summary-card.pass {{ border-top: 4px solid var(--pass-border); }}
-    .summary-card.pass .count {{ color: var(--pass-color); }}
-    .summary-card.pass .label {{ color: var(--pass-border); }}
-    .summary-card.warn {{ border-top: 4px solid var(--warn-border); }}
-    .summary-card.warn .count {{ color: var(--warn-color); }}
-    .summary-card.warn .label {{ color: var(--warn-border); }}
-    .summary-card.fail {{ border-top: 4px solid var(--fail-border); }}
-    .summary-card.fail .count {{ color: var(--fail-color); }}
-    .summary-card.fail .label {{ color: var(--fail-border); }}
-    .summary-card.skip {{ border-top: 4px solid var(--skip-border); }}
-    .summary-card.skip .count {{ color: var(--skip-color); }}
-    .summary-card.skip .label {{ color: var(--skip-border); }}
+    .sb-stat-count {{ font-size: 1.7rem; line-height: 1; letter-spacing: -.02em; }}
+    .sb-stat-label {{ font-size: .58rem; text-transform: uppercase; letter-spacing: .08em; margin-top: .25rem; opacity: .92; line-height: 1.2; }}
+    .sb-stat.pass {{ background: #2d9e55; }}
+    .sb-stat.warn {{ background: #c98209; }}
+    .sb-stat.fail {{ background: #c0392b; }}
+    .sb-stat.skip {{ background: #5a6b7d; }}
 
     /* ── Section ── */
     .section {{ margin-bottom: 1.5rem; }}
@@ -274,6 +289,83 @@ html_template = """<!DOCTYPE html>
     }}
     .footer a {{ color: var(--accent); text-decoration: none; }}
     .footer a:hover {{ text-decoration: underline; }}
+
+    /* ── Inline result summary chips (at most 4 per test) ── */
+    .result-chips {{ display: flex; gap: .4rem; margin-top: .45rem; flex-wrap: wrap; }}
+    .rchip {{
+      display: inline-flex; align-items: center; gap: .3rem;
+      padding: .22rem .75rem; border-radius: 9999px;
+      font-size: .72rem; font-weight: 700; white-space: nowrap; cursor: default;
+    }}
+    .rchip-pass {{ background: var(--pass-bg); color: var(--pass-color); border: 1px solid var(--pass-border); }}
+    .rchip-warn {{ background: var(--warn-bg); color: var(--warn-color); border: 1px solid var(--warn-border); }}
+    .rchip-fail {{ background: var(--fail-bg); color: var(--fail-color); border: 1px solid var(--fail-border); }}
+    .rchip-skip {{ background: var(--skip-bg); color: var(--skip-color); border: 1px solid var(--skip-border); }}
+
+    /* ── Section count badges ── */
+    .section-counts {{ display: flex; gap: .35rem; margin-left: auto; flex-shrink: 0; align-items: center; }}
+    .scnt {{ padding: .12rem .58rem; border-radius: 9999px; font-size: .7rem; font-weight: 700; letter-spacing: .03em; }}
+    .scnt-pass {{ background: rgba(56,161,105,.35);   color: #c6f6d5; }}
+    .scnt-warn {{ background: rgba(214,158,46,.35);  color: #fefcbf; }}
+    .scnt-fail {{ background: rgba(229,62,62,.35);    color: #fed7d7; }}
+    .scnt-skip {{ background: rgba(160,174,192,.3);  color: #e2e8f0; }}
+
+    /* ── Test block status left border ── */
+    .test-block.tb-fail {{ border-left: 4px solid var(--fail-border); }}
+    .test-block.tb-warn {{ border-left: 4px solid var(--warn-border); }}
+    .test-block.tb-pass {{ border-left: 4px solid var(--pass-border); }}
+
+    /* ── Sidebar progress bar ── */
+    .sb-pass-rate {{
+      text-align: center;
+      margin: .5rem 0 .65rem;
+    }}
+    .sb-pass-rate-num {{
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: #2d9e55;
+      letter-spacing: -.03em;
+      line-height: 1;
+    }}
+    .sb-pass-rate-sub {{
+      font-size: .62rem;
+      color: #64748b;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      margin-top: .18rem;
+    }}
+    .sb-prog-bar {{
+      height: 12px;
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      background: #f0f3f7;
+      margin-bottom: .3rem;
+    }}
+    .sb-prog-seg {{
+      height: 100%;
+      width: 0%;
+      transition: width 1.2s cubic-bezier(.4,0,.2,1);
+    }}
+    .sb-prog-seg.pass {{ background: #2d9e55; }}
+    .sb-prog-seg.warn {{ background: #c98209; }}
+    .sb-prog-seg.fail {{ background: #c0392b; }}
+    .sb-prog-seg.skip {{ background: #cbd5e1; }}
+    .sb-prog-labels {{ display: flex; }}
+    .sb-prog-lbl {{
+      font-size: .62rem;
+      font-weight: 700;
+      text-align: center;
+      overflow: hidden;
+      white-space: nowrap;
+      width: 0%;
+      transition: width 1.2s cubic-bezier(.4,0,.2,1);
+    }}
+    .sb-prog-lbl.pass {{ color: #2d9e55; }}
+    .sb-prog-lbl.warn {{ color: #c98209; }}
+    .sb-prog-lbl.fail {{ color: #c0392b; }}
+    .sb-prog-lbl.skip {{ color: #94a3b8; }}
   </style>
 </head>
 <body>
@@ -294,44 +386,65 @@ html_template = """<!DOCTYPE html>
   </div>
 </header>
 
-<div class="container">
+<div class="page-wrap">
 
-  <div class="info-grid">
-    <div class="card">
-      <div class="card-label">Target System</div>
-      <div class="card-value">{}/redfish/v1/</div>
+  <aside class="sidebar">
+    <div class="sb-heading">System Under Test</div>
+    <div class="sb-row"><span class="sb-key">Host</span><span class="sb-val">{}/redfish/v1/</span></div>
+    <div class="sb-row"><span class="sb-key">User</span><span class="sb-val"><strong>{}</strong></span></div>
+    <div class="sb-row"><span class="sb-key">Password</span><span class="sb-val">{}</span></div>
+    <div class="sb-row"><span class="sb-key">Product</span><span class="sb-val">{}</span></div>
+    <div class="sb-row"><span class="sb-key">Manufacturer</span><span class="sb-val">{}</span></div>
+    <div class="sb-row"><span class="sb-key">Model</span><span class="sb-val">{}</span></div>
+    <div class="sb-row"><span class="sb-key">Firmware</span><span class="sb-val">{}</span></div>
+    <div class="sb-heading" style="margin-top:1.25rem">Results Summary</div>
+    <div class="sb-stats">
+      <div class="sb-stat pass">
+        <span class="sb-stat-count">{}</span>
+        <span class="sb-stat-label">&#10003;<br>Pass</span>
+      </div>
+      <div class="sb-stat warn">
+        <span class="sb-stat-count">{}</span>
+        <span class="sb-stat-label">&#9888;<br>Warning</span>
+      </div>
+      <div class="sb-stat fail">
+        <span class="sb-stat-count">{}</span>
+        <span class="sb-stat-label">&#10007;<br>Fail</span>
+      </div>
+      <div class="sb-stat skip">
+        <span class="sb-stat-count">{}</span>
+        <span class="sb-stat-label">&ndash;<br>Not Tested</span>
+      </div>
     </div>
-    <div class="card">
-      <div class="card-label">Credentials</div>
-      <div class="card-value">User:&nbsp;<strong>{}</strong>&nbsp;&nbsp;|&nbsp;&nbsp;Password:&nbsp;{}</div>
+
+    <div class="sb-heading" style="margin-top:1.25rem">Pass Rate</div>
+    <div class="sb-pass-rate">
+      <div class="sb-pass-rate-num" id="pass-rate-pct">—</div>
+      <div class="sb-pass-rate-sub">of all checks passed</div>
     </div>
-    <div class="card">
-      <div class="card-label">Product</div>
-      <div class="card-value">{}</div>
+    <div class="sb-prog-bar">
+      <div class="sb-prog-seg pass" id="pseg-pass"></div>
+      <div class="sb-prog-seg warn" id="pseg-warn"></div>
+      <div class="sb-prog-seg fail" id="pseg-fail"></div>
+      <div class="sb-prog-seg skip" id="pseg-skip"></div>
     </div>
-    <div class="card">
-      <div class="card-label">Hardware</div>
-      <table class="hw-table">
-        <tr><td class="hw-key">Manufacturer</td><td class="hw-val">{}</td></tr>
-        <tr><td class="hw-key">Model</td><td class="hw-val">{}</td></tr>
-        <tr><td class="hw-key">Firmware</td><td class="hw-val">{}</td></tr>
-      </table>
+    <div class="sb-prog-labels">
+      <div class="sb-prog-lbl pass" id="plbl-pass"></div>
+      <div class="sb-prog-lbl warn" id="plbl-warn"></div>
+      <div class="sb-prog-lbl fail" id="plbl-fail"></div>
+      <div class="sb-prog-lbl skip" id="plbl-skip"></div>
     </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="toolbar">
+      <button class="toolbar-btn" onclick="expandAll()">&#9660;&nbsp; Expand All</button>
+      <button class="toolbar-btn" onclick="collapseAll()">&#9654;&nbsp; Collapse All</button>
+    </div>
+
+    {}
+
   </div>
-
-  <div class="summary-grid">
-    <div class="summary-card pass"><div class="count">{}</div><div class="label">Pass</div></div>
-    <div class="summary-card warn"><div class="count">{}</div><div class="label">Warning</div></div>
-    <div class="summary-card fail"><div class="count">{}</div><div class="label">Fail</div></div>
-    <div class="summary-card skip"><div class="count">{}</div><div class="label">Not Tested</div></div>
-  </div>
-
-  <div class="toolbar">
-    <button class="toolbar-btn" onclick="expandAll()">&#9660;&nbsp; Expand All</button>
-    <button class="toolbar-btn" onclick="collapseAll()">&#9654;&nbsp; Collapse All</button>
-  </div>
-
-  {}
 
 </div>
 
@@ -405,6 +518,38 @@ html_template = """<!DOCTYPE html>
       scrollBtn.classList.remove('visible');
     }}
   }});
+
+  /* ── Pass-rate progress bar animation ── */
+  (function() {{
+    var keys = ['pass', 'warn', 'fail', 'skip'];
+    var counts = {{}};
+    var total = 0;
+    keys.forEach(function(k) {{
+      var el = document.querySelector('.sb-stat.' + k + ' .sb-stat-count');
+      counts[k] = el ? (parseInt(el.textContent, 10) || 0) : 0;
+      total += counts[k];
+    }});
+    if (!total) return;
+
+    /* Show overall pass-rate number immediately */
+    var pctPass = (counts.pass / total * 100);
+    var pctEl = document.getElementById('pass-rate-pct');
+    if (pctEl) pctEl.textContent = pctPass.toFixed(1) + '%';
+
+    /* Animate bars after a short paint delay */
+    setTimeout(function() {{
+      keys.forEach(function(k) {{
+        var pct = (counts[k] / total * 100);
+        var seg = document.getElementById('pseg-' + k);
+        var lbl = document.getElementById('plbl-' + k);
+        if (seg) seg.style.width = pct.toFixed(3) + '%';
+        if (lbl) {{
+          lbl.style.width = pct.toFixed(3) + '%';
+          lbl.textContent = counts[k] > 0 ? pct.toFixed(1) + '%' : '';
+        }}
+      }});
+    }}, 120);
+  }})();
 </script>
 
 </body>
@@ -430,20 +575,52 @@ def html_report(sut: SystemUnderTest, report_dir, time, tool_version):
 
     html = ""
     for test_category in sut._results:
+        # Aggregate counts for section header badges
+        sec_pass = sum(1 for t in test_category["Tests"] for r in t["Results"] if r["Result"] == "PASS")
+        sec_warn = sum(1 for t in test_category["Tests"] for r in t["Results"] if r["Result"] == "WARN")
+        sec_fail = sum(1 for t in test_category["Tests"] for r in t["Results"] if r["Result"] == "FAIL")
+        sec_skip = sum(1 for t in test_category["Tests"] for r in t["Results"] if not r["Result"])
+        sec_cnt = '<div class="section-counts">'
+        if sec_pass: sec_cnt += '<span class="scnt scnt-pass">&#10003;&nbsp;{}</span>'.format(sec_pass)
+        if sec_warn: sec_cnt += '<span class="scnt scnt-warn">&#9888;&nbsp;{}</span>'.format(sec_warn)
+        if sec_fail: sec_cnt += '<span class="scnt scnt-fail">&#10007;&nbsp;{}</span>'.format(sec_fail)
+        if sec_skip: sec_cnt += '<span class="scnt scnt-skip">&ndash;&nbsp;{}</span>'.format(sec_skip)
+        sec_cnt += '</div>'
         html += '<div class="section">'
-        html += '<div class="section-header"><span class="section-arrow">&#9660;</span>{}</div>'.format(
-            html_mod.escape(test_category["Category"])
+        html += '<div class="section-header"><span class="section-arrow">&#9660;</span>{}{}</div>'.format(
+            html_mod.escape(test_category["Category"]), sec_cnt
         )
         html += '<div class="section-body">'
 
         for test in test_category["Tests"]:
-            html += '<div class="test-block">'
+            # Determine worst result for status left-border
+            _rvals = [r["Result"] for r in test["Results"]]
+            if "FAIL" in _rvals:
+                tb_cls = " tb-fail"
+            elif "WARN" in _rvals:
+                tb_cls = " tb-warn"
+            elif "PASS" in _rvals:
+                tb_cls = " tb-pass"
+            else:
+                tb_cls = ""
+            html += '<div class="test-block{}">' .format(tb_cls)
             html += '<div class="test-heading">'
             html += '<div class="test-heading-info">'
             html += '<div class="test-name">{}</div>'.format(html_mod.escape(test["Name"]))
             html += '<div class="test-desc">{}</div>'.format(html_mod.escape(test["Description"]))
             if test.get("Details"):
                 html += '<div class="test-detail">{}</div>'.format(html_mod.escape(test["Details"]))
+            # Inline result summary chips — aggregate counts (max 4 chips per test)
+            t_pass = sum(1 for _r in test["Results"] if _r["Result"] == "PASS")
+            t_warn = sum(1 for _r in test["Results"] if _r["Result"] == "WARN")
+            t_fail = sum(1 for _r in test["Results"] if _r["Result"] == "FAIL")
+            t_skip = sum(1 for _r in test["Results"] if not _r["Result"])
+            html += '<div class="result-chips">'
+            if t_pass: html += '<span class="rchip rchip-pass">&#10003; {} Pass</span>'.format(t_pass)
+            if t_warn: html += '<span class="rchip rchip-warn">&#9888; {} Warn</span>'.format(t_warn)
+            if t_fail: html += '<span class="rchip rchip-fail">&#10007; {} Fail</span>'.format(t_fail)
+            if t_skip: html += '<span class="rchip rchip-skip">&ndash; {} N/A</span>'.format(t_skip)
+            html += '</div>'
             html += '</div>'  # test-heading-info
             html += '<span class="test-toggle">&#9660;</span>'
             html += '</div>'  # test-heading
