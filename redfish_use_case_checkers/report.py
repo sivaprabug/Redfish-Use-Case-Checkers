@@ -25,196 +25,268 @@ html_template = """<!DOCTYPE html>
     *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
     :root {{
       --primary:       #1a3a5c;
-      --primary-light: #2c5282;
-      --accent:        #3182ce;
+      --primary-light: #0d6efd;
+      --accent:        #0d6efd;
+      --header-main-h: 56px;
+      --header-total-h: var(--header-main-h);
       --pass-color:  #276749; --pass-bg:  #c6f6d5; --pass-border:  #38a169;
       --warn-color:  #744210; --warn-bg:  #fefcbf; --warn-border:  #d69e2e;
       --fail-color:  #742a2a; --fail-bg:  #fed7d7; --fail-border:  #e53e3e;
       --skip-color:  #4a5568; --skip-bg:  #e2e8f0; --skip-border:  #a0aec0;
-      --border:   #e2e8f0;
-      --text:     #2d3748;
-      --text-sub: #718096;
-      --bg:       #f7fafc;
+      --border:   #dde3ec;
+      --text:     #1a1a2e;
+      --text-sub: #6c757d;
+      --bg:       #f0f2f5;
       --card-bg:  #ffffff;
     }}
     body {{
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+      font-family: "Segoe UI", system-ui, Arial, sans-serif;
+      font-size: 13px;
       background: var(--bg);
       color: var(--text);
       line-height: 1.5;
+      display: flex;
+      flex-direction: column;
     }}
 
     /* ── Header ── */
     .header {{
-      background: var(--primary);
-      color: #fff;
-      padding: 0 2rem;
-      height: 64px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 2px 8px rgba(0,0,0,.3);
       position: sticky;
       top: 0;
       z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,.35);
+    }}
+    .header-main {{
+      background: linear-gradient(90deg, #0d1b2a 0%, #1a3a5c 60%, #1565c0 100%);
+      color: #fff;
+      padding: 0 16px;
+      height: var(--header-main-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      position: relative;
     }}
     .header-brand    {{ display: flex; align-items: center; gap: .9rem; }}
-    .header-logo img {{ height: 40px; }}
-    .header-title    {{ font-size: 1.05rem; font-weight: 600; letter-spacing: .02em; }}
-    .header-subtitle {{ font-size: .73rem; opacity: .75; }}
-    .header-meta     {{ text-align: right; font-size: .78rem; opacity: .85; line-height: 1.7; }}
-    .header-meta a   {{ color: rgba(255,255,255,.7); font-size: .7rem; text-decoration: none; }}
+    .header-logo img {{ height: 34px; border-radius: 4px; }}
+    .header-title    {{ font-size: 15px; font-weight: 700; letter-spacing: .3px; white-space: nowrap; }}
+    .header-subtitle {{ font-size: 11px; color: rgba(255,255,255,.55); white-space: nowrap; }}
+    .header-meta     {{ color: rgba(255,255,255,.7); font-size: 11px; text-align: right; line-height: 1.5; margin-left: auto; flex-shrink: 0; }}
+    .header-meta a   {{ color: #90caf9; text-decoration: none; }}
+    .header-meta a:hover {{ text-decoration: underline; }}
+    .header-filter-wrap {{
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 380px;
+    }}
+    .header-filter-shell {{ position: relative; width: 100%; }}
+    .header-filter-icon {{
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255,255,255,.5);
+      font-size: 14px;
+      pointer-events: none;
+    }}
+    .header-filter {{
+      width: 100%;
+      height: 30px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.35);
+      background: rgba(255,255,255,.12);
+      color: #f8fbff;
+      padding: 0 30px;
+      font-size: 12px;
+      font-family: "Cascadia Code", "Consolas", monospace;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }}
+    .header-filter::placeholder {{ color: rgba(255,255,255,.45); }}
+    .header-filter:focus {{
+      border-color: #90caf9;
+      box-shadow: 0 0 0 3px rgba(144,202,249,.2);
+      background: rgba(255,255,255,.18);
+    }}
+    .header-filter-clear {{
+      position: absolute;
+      right: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: rgba(255,255,255,.5);
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1;
+      display: none;
+    }}
+    .header-filter-clear:hover {{ color: #ef5350; }}
+    .header-filter-note {{
+      font-size: 10px;
+      color: rgba(255,255,255,.5);
+      margin-top: 2px;
+      text-align: center;
+      white-space: nowrap;
+    }}
+    .header-filter-note b {{ color: #90caf9; }}
 
     /* ── Page layout ── */
-    .page-wrap {{ display: flex; align-items: flex-start; min-height: calc(100vh - 64px); }}
+    .page-wrap {{ display: flex; align-items: flex-start; min-height: calc(100vh - var(--header-total-h)); }}
     .sidebar {{
-      width: 240px;
+      width: 300px;
       flex-shrink: 0;
       background: #ffffff;
       border-right: 1px solid #dde3ec;
-      box-shadow: 2px 0 8px rgba(0,0,0,.05);
-      padding: 1.4rem 1rem 2rem;
+      box-shadow: 2px 0 8px rgba(0,0,0,.04);
+      padding: 16px 18px 10px;
       position: sticky;
-      top: 64px;
-      height: calc(100vh - 64px);
+      top: var(--header-total-h);
+      height: calc(100vh - var(--header-total-h));
       overflow-y: auto;
     }}
-    .main-content {{ flex: 1; padding: 1.5rem; min-width: 0; }}
+    .main-content {{ flex: 1; min-width: 0; padding: 20px 24px 60px; overflow-y: auto; }}
 
     /* ── Sidebar section headings ── */
     .sb-heading {{
-      font-size: .6rem;
+      font-size: 10px;
       font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: .12em;
-      color: var(--primary);
-      padding: .3rem .5rem;
-      background: #eef3fa;
-      border-left: 3px solid var(--accent);
-      border-radius: 0 4px 4px 0;
-      margin-bottom: .65rem;
+      letter-spacing: 1px;
+      color: #8a97aa;
+      margin-bottom: 10px;
+      border: none;
+      background: transparent;
+      padding: 0;
+      border-radius: 0;
     }}
-    .sb-stats + .sb-heading {{ margin-top: 1.4rem; }}
+    .sb-stats + .sb-heading {{ margin-top: 16px; }}
 
     /* ── Sidebar info rows ── */
     .sb-row {{
       display: flex;
       justify-content: space-between;
-      align-items: baseline;
+      align-items: flex-start;
       gap: .5rem;
-      padding: .32rem 0;
-      border-bottom: 1px solid #f0f3f7;
-      font-size: .78rem;
+      padding: 4px 0;
+      border-bottom: none;
+      font-size: 12px;
     }}
     .sb-row:last-of-type {{ border-bottom: none; }}
     .sb-key {{
-      color: #64748b;
-      font-size: .67rem;
+      color: #6c757d;
+      font-size: 12px;
       font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .05em;
       white-space: nowrap;
       flex-shrink: 0;
+      min-width: 90px;
     }}
     .sb-val {{
       font-weight: 600;
-      color: #1e293b;
+      color: #333;
       word-break: break-all;
       text-align: right;
-      font-size: .78rem;
+      font-size: 12px;
     }}
 
     /* ── Sidebar summary stat blocks — 2×2 grid ── */
     .sb-stats {{
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: .5rem;
-      margin-top: .4rem;
+      gap: 8px;
+      margin-top: 0;
     }}
     .sb-stat {{
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: .7rem .4rem .55rem;
+      padding: 10px 12px;
       border-radius: 8px;
       font-weight: 700;
       color: #fff;
       text-align: center;
-      min-height: 66px;
+      min-height: 72px;
     }}
-    .sb-stat-count {{ font-size: 1.7rem; line-height: 1; letter-spacing: -.02em; }}
-    .sb-stat-label {{ font-size: .58rem; text-transform: uppercase; letter-spacing: .08em; margin-top: .25rem; opacity: .92; line-height: 1.2; }}
-    .sb-stat.pass {{ background: #2d9e55; }}
-    .sb-stat.warn {{ background: #c98209; }}
-    .sb-stat.fail {{ background: #c0392b; }}
-    .sb-stat.skip {{ background: #5a6b7d; }}
+    .sb-stat-count {{ font-size: 26px; line-height: 1.1; letter-spacing: -.02em; }}
+    .sb-stat-label {{ font-size: 10px; text-transform: uppercase; letter-spacing: .7px; margin-top: 2px; opacity: .9; line-height: 1.2; }}
+    .sb-stat.pass {{ background: linear-gradient(135deg, #27ae60, #2ecc71); }}
+    .sb-stat.warn {{ background: linear-gradient(135deg, #d68910, #f39c12); }}
+    .sb-stat.fail {{ background: linear-gradient(135deg, #c0392b, #e74c3c); }}
+    .sb-stat.skip {{ background: linear-gradient(135deg, #5d6d7e, #85929e); }}
 
     /* ── Section ── */
     .section {{ margin-bottom: 1.5rem; }}
     .section-header {{
-      background: var(--primary-light);
-      color: #fff;
-      padding: .75rem 1.25rem;
+      background: #f7f9fc;
+      color: #0d1b2a;
+      padding: 10px 16px;
       border-radius: 8px 8px 0 0;
       font-weight: 600;
-      font-size: .88rem;
-      letter-spacing: .03em;
+      font-size: 13px;
+      letter-spacing: .01em;
       display: flex;
       align-items: center;
       gap: .55rem;
       cursor: pointer;
       user-select: none;
+      border-bottom: 1px solid #dde3ec;
     }}
-    .section-arrow {{ font-size: .65rem; transition: transform .2s; }}
+    .section-arrow {{ font-size: .7rem; color: #6c757d; transition: transform .2s; }}
     .section-header.collapsed .section-arrow {{ transform: rotate(-90deg); }}
     .section-body {{
       border: 1px solid var(--border);
       border-top: none;
       border-radius: 0 0 8px 8px;
       overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,.05);
+      margin-bottom: 8px;
     }}
 
     /* ── Test block ── */
     .test-block {{ border-bottom: 1px solid var(--border); }}
     .test-block:last-child {{ border-bottom: none; }}
     .test-heading {{
-      background: #f8f9fa;
-      padding: .7rem 1.25rem;
+      background: #fff;
+      padding: 10px 16px;
       cursor: pointer;
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
       gap: 1rem;
     }}
-    .test-heading:hover {{ background: #eef2f7; }}
-    .test-name   {{ font-weight: 600; font-size: .87rem; color: var(--primary); }}
-    .test-desc   {{ font-size: .79rem; color: var(--text-sub); margin-top: .12rem; }}
-    .test-detail {{ font-size: .76rem; color: var(--text-sub); margin-top: .08rem; font-style: italic; }}
+    .test-heading:hover {{ background: #f8fafc; }}
+    .test-name   {{ font-weight: 700; font-size: 13px; color: #0d1b2a; font-family: "Cascadia Code", "Consolas", monospace; }}
+    .test-desc   {{ font-size: 11px; color: #6c757d; margin-top: .12rem; font-style: italic; }}
+    .test-detail {{ font-size: 11px; color: #6c757d; margin-top: .08rem; font-style: italic; }}
     .test-toggle {{ flex-shrink: 0; font-size: .65rem; color: var(--text-sub); margin-top: .3rem; transition: transform .2s; }}
     .test-body         {{ display: block; }}
     .test-body.hidden  {{ display: none; }}
 
     /* ── Results table ── */
-    .test-results-table {{ width: 100%; border-collapse: collapse; font-size: .83rem; }}
-    .test-results-table thead tr {{ background: #edf2f7; }}
+    .test-results-table {{ width: 100%; border-collapse: collapse; font-size: 12px; }}
+    .test-results-table thead tr {{ background: #f0f4f8; }}
     .test-results-table th {{
-      padding: .45rem 1.25rem;
+      padding: 7px 12px;
       text-align: left;
-      font-weight: 600;
-      font-size: .7rem;
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      color: var(--text-sub);
-      border-bottom: 1px solid var(--border);
+      font-weight: 700;
+      font-size: 11px;
+      color: #2c3e50;
+      border-bottom: 2px solid #dde3ec;
     }}
     .test-results-table td {{
-      padding: .5rem 1.25rem;
-      border-bottom: 1px solid #f0f0f0;
+      padding: 5px 12px;
+      border-bottom: 1px solid #f0f2f5;
       vertical-align: top;
+      color: #333;
+      background: #fff;
     }}
     .test-results-table tr:last-child td {{ border-bottom: none; }}
-    .test-results-table tr:hover td {{ background: #f7fafc; }}
+    .test-results-table tr:hover td {{ background: #f8fafc; }}
     .col-op     {{ width: 38%; }}
     .col-result {{ width:  9%; white-space: nowrap; }}
     .col-msg    {{ width: 53%; }}
@@ -229,10 +301,10 @@ html_template = """<!DOCTYPE html>
       letter-spacing: .04em;
       text-transform: uppercase;
     }}
-    .badge-pass {{ background: var(--pass-bg); color: var(--pass-color); }}
-    .badge-warn {{ background: var(--warn-bg); color: var(--warn-color); }}
-    .badge-fail {{ background: var(--fail-bg); color: var(--fail-color); }}
-    .badge-skip {{ background: var(--skip-bg); color: var(--skip-color); }}
+    .badge-pass {{ background: #d4edda; color: #145a32; }}
+    .badge-warn {{ background: #fff3cd; color: #7d6008; }}
+    .badge-fail {{ background: #f8d7da; color: #7b241c; }}
+    .badge-skip {{ background: #f5f7fa; color: #7f8c8d; }}
 
     /* ── Toolbar ── */
     .toolbar {{
@@ -242,18 +314,19 @@ html_template = """<!DOCTYPE html>
       margin-bottom: 1rem;
     }}
     .toolbar-btn {{
-      background: var(--primary-light);
+      background: #0d6efd;
       color: #fff;
       border: none;
-      border-radius: 6px;
-      padding: .4rem .9rem;
-      font-size: .78rem;
+      border-radius: 5px;
+      padding: 5px 13px;
+      font-size: 11px;
       font-weight: 600;
       cursor: pointer;
       letter-spacing: .02em;
       transition: background .15s;
+      box-shadow: 0 2px 5px rgba(13,110,253,.3);
     }}
-    .toolbar-btn:hover {{ background: var(--primary); }}
+    .toolbar-btn:hover {{ background: #0b5ed7; }}
 
     /* ── Scroll-to-top ── */
     #scroll-top {{
@@ -263,19 +336,19 @@ html_template = """<!DOCTYPE html>
       width: 42px;
       height: 42px;
       border-radius: 50%;
-      background: var(--primary-light);
+      background: #0d6efd;
       color: #fff;
       border: none;
       font-size: 1.1rem;
       cursor: pointer;
-      box-shadow: 0 3px 10px rgba(0,0,0,.25);
+      box-shadow: 0 4px 14px rgba(13,110,253,.45);
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 200;
       transition: background .15s, opacity .2s;
     }}
-    #scroll-top:hover {{ background: var(--primary); }}
+    #scroll-top:hover {{ background: #0b5ed7; }}
     #scroll-top.visible {{ display: flex; }}
 
     /* ── Footer ── */
@@ -304,11 +377,11 @@ html_template = """<!DOCTYPE html>
 
     /* ── Section count badges ── */
     .section-counts {{ display: flex; gap: .35rem; margin-left: auto; flex-shrink: 0; align-items: center; }}
-    .scnt {{ padding: .12rem .58rem; border-radius: 9999px; font-size: .7rem; font-weight: 700; letter-spacing: .03em; }}
-    .scnt-pass {{ background: rgba(56,161,105,.35);   color: #c6f6d5; }}
-    .scnt-warn {{ background: rgba(214,158,46,.35);  color: #fefcbf; }}
-    .scnt-fail {{ background: rgba(229,62,62,.35);    color: #fed7d7; }}
-    .scnt-skip {{ background: rgba(160,174,192,.3);  color: #e2e8f0; }}
+    .scnt {{ padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: .01em; }}
+    .scnt-pass {{ background: #d4edda; color: #145a32; }}
+    .scnt-warn {{ background: #fff3cd; color: #7d6008; }}
+    .scnt-fail {{ background: #f8d7da; color: #7b241c; }}
+    .scnt-skip {{ background: #f5f7fa; color: #7f8c8d; }}
 
     /* ── Test block status left border ── */
     .test-block.tb-fail {{ border-left: 4px solid var(--fail-border); }}
@@ -366,23 +439,48 @@ html_template = """<!DOCTYPE html>
     .sb-prog-lbl.warn {{ color: #c98209; }}
     .sb-prog-lbl.fail {{ color: #c0392b; }}
     .sb-prog-lbl.skip {{ color: #94a3b8; }}
+
+    @media (max-width: 860px) {{
+      .header-filter-wrap {{ width: 240px; }}
+      .header-meta {{ display: none; }}
+    }}
+
+    @media (max-width: 540px) {{
+      .header-main {{ padding: 0 10px; }}
+      .header-logo img {{ height: 28px; }}
+      .header-brand > div:last-child {{ display: none; }}
+      .header-filter-wrap {{ width: 180px; }}
+      .sidebar {{ width: 260px; }}
+    }}
   </style>
 </head>
 <body>
 
 <header class="header">
-  <div class="header-brand">
-    <div class="header-logo">
-      <img src="data:image/gif;base64,{}" alt="DMTF Redfish Logo">
+  <div class="header-main">
+    <div class="header-brand">
+      <div class="header-logo">
+        <img src="data:image/gif;base64,{}" alt="DMTF Redfish Logo">
+      </div>
+      <div>
+        <div class="header-title">Redfish Use Case Checkers</div>
+        <div class="header-subtitle">Test Report</div>
+      </div>
     </div>
-    <div>
-      <div class="header-title">Redfish Use Case Checkers</div>
-      <div class="header-subtitle">Automated Compliance Report &mdash; v{}</div>
+
+    <div class="header-filter-wrap">
+      <div class="header-filter-shell">
+        <span class="header-filter-icon">&#8260;</span>
+        <input id="header-uri-filter" class="header-filter" type="text" placeholder="Filter by Use Case..." aria-label="Filter by Use Case" autocomplete="off">
+        <button id="header-filter-clear" class="header-filter-clear" title="Clear">&#10005;</button>
+      </div>
+      <div class="header-filter-note">Showing <b id="header-filter-count">...</b> test blocks</div>
     </div>
-  </div>
-  <div class="header-meta">
-    Generated: {}<br>
-    <a href="https://github.com/DMTF/Redfish-Use-Case-Checkers">github.com/DMTF/Redfish-Use-Case-Checkers</a>
+
+    <div class="header-meta">
+      Version: {} &nbsp;|&nbsp; Generated: {}<br>
+      <a href="https://github.com/DMTF/Redfish-Use-Case-Checkers">github.com/DMTF/Redfish-Use-Case-Checkers</a>
+    </div>
   </div>
 </header>
 
@@ -390,7 +488,7 @@ html_template = """<!DOCTYPE html>
 
   <aside class="sidebar">
     <div class="sb-heading">System Under Test</div>
-    <div class="sb-row"><span class="sb-key">Host</span><span class="sb-val">{}/redfish/v1/</span></div>
+    <div class="sb-row"><span class="sb-key">Host</span><span class="sb-val">{}</span></div>
     <div class="sb-row"><span class="sb-key">User</span><span class="sb-val"><strong>{}</strong></span></div>
     <div class="sb-row"><span class="sb-key">Password</span><span class="sb-val">{}</span></div>
     <div class="sb-row"><span class="sb-key">Product</span><span class="sb-val">{}</span></div>
@@ -550,6 +648,64 @@ html_template = """<!DOCTYPE html>
       }});
     }}, 120);
   }})();
+
+  /* Header URI filter (section and test title text match) */
+  (function() {{
+    var filter = document.getElementById('header-uri-filter');
+    var clearBtn = document.getElementById('header-filter-clear');
+    var countEl = document.getElementById('header-filter-count');
+    if (!filter) return;
+
+    function updateCount() {{
+      var allTests = document.querySelectorAll('.test-block').length;
+      var visibleTests = 0;
+      document.querySelectorAll('.test-block').forEach(function(tb) {{
+        if (tb.style.display !== 'none') visibleTests += 1;
+      }});
+      if (countEl) countEl.textContent = visibleTests + ' / ' + allTests;
+      if (clearBtn) clearBtn.style.display = filter.value.trim() ? 'block' : 'none';
+    }}
+
+    if (clearBtn) {{
+      clearBtn.addEventListener('click', function() {{
+        filter.value = '';
+        filter.dispatchEvent(new Event('input'));
+      }});
+    }}
+
+    filter.addEventListener('input', function() {{
+      var q = (this.value || '').toLowerCase().trim();
+      var sections = document.querySelectorAll('.section');
+
+      sections.forEach(function(section) {{
+        var sectionHdr = section.querySelector('.section-header');
+        var testBlocks = section.querySelectorAll('.test-block');
+        var sectionMatches = false;
+
+        testBlocks.forEach(function(tb) {{
+          var heading = tb.querySelector('.test-heading');
+          var txt = heading ? heading.textContent.toLowerCase() : '';
+          var match = !q || txt.indexOf(q) !== -1;
+          tb.style.display = match ? '' : 'none';
+          if (match) sectionMatches = true;
+        }});
+
+        if (sectionHdr && !sectionMatches && q) {{
+          var secTxt = sectionHdr.textContent.toLowerCase();
+          if (secTxt.indexOf(q) !== -1) {{
+            sectionMatches = true;
+            testBlocks.forEach(function(tb) {{ tb.style.display = ''; }});
+          }}
+        }}
+
+        section.style.display = sectionMatches || !q ? '' : 'none';
+      }});
+
+      updateCount();
+    }});
+
+    updateCount();
+  }})();
 </script>
 
 </body>
@@ -692,7 +848,7 @@ def _thin_border():
 def _cell(ws, row, col, value="", bold=False, color=None, fill_hex=None,
           align="left", wrap=False):
     c = ws.cell(row=row, column=col, value=value)
-    c.font = Font(name="Calibri", size=10, bold=bold, color=color or "000000")
+    c.font = Font(name="Segoe UI", size=10, bold=bold, color=color or "1A1A2E")
     c.alignment = Alignment(horizontal=align, vertical="center", wrap_text=wrap)
     c.border = _thin_border()
     if fill_hex:
@@ -722,38 +878,43 @@ def xlsx_report(sut: SystemUnderTest, report_dir, time, tool_version):
     ws_sum = wb.active
     ws_sum.title = "Summary"
 
-    HDR_FILL   = "1A3A5C"
+    HDR_FILL   = "0D1B2A"
     HDR_FONT   = "FFFFFF"
-    SUB_FILL   = "2C5282"
-    META_FILL  = "EDF2F7"
-    PASS_FILL  = "C6F6D5"; PASS_FONT  = "276749"
-    WARN_FILL  = "FEFCBF"; WARN_FONT  = "744210"
-    FAIL_FILL  = "FED7D7"; FAIL_FONT  = "742A2A"
-    SKIP_FILL  = "E2E8F0"; SKIP_FONT  = "4A5568"
-    CAT_FILL   = "2C5282"
-    TEST_FILL  = "EDF2F7"
+    SUB_FILL   = "1A3A5C"
+    ACCENT_FILL= "1565C0"
+    META_FILL  = "F0F2F5"
+    PASS_FILL  = "D4EDDA"; PASS_FONT  = "145A32"
+    WARN_FILL  = "FFF3CD"; WARN_FONT  = "7D6008"
+    FAIL_FILL  = "F8D7DA"; FAIL_FONT  = "7B241C"
+    SKIP_FILL  = "F5F7FA"; SKIP_FONT  = "7F8C8D"
+    CAT_FILL   = "1565C0"
+    TEST_FILL  = "F7F9FC"
+    SCORE_PASS = "27AE60"
+    SCORE_WARN = "D68910"
+    SCORE_FAIL = "C0392B"
+    SCORE_SKIP = "5D6D7E"
 
     # Title row  — spans A:D (4 equal columns)
     ws_sum.merge_cells("A1:D1")
     t = ws_sum["A1"]
     t.value = "Redfish Use Case Checkers — Compliance Report"
-    t.font = Font(name="Calibri", size=14, bold=True, color=HDR_FONT)
+    t.font = Font(name="Segoe UI", size=14, bold=True, color=HDR_FONT)
     t.fill = PatternFill("solid", fgColor=HDR_FILL)
     t.alignment = Alignment(horizontal="center", vertical="center")
-    ws_sum.row_dimensions[1].height = 30
+    ws_sum.row_dimensions[1].height = 32
 
     # Sub-title
     ws_sum.merge_cells("A2:D2")
     s = ws_sum["A2"]
-    s.value = "Tool Version: {}    |    Generated: {}".format(tool_version, time.strftime("%c"))
-    s.font = Font(name="Calibri", size=10, color=HDR_FONT)
+    s.value = "Version: {}    |    Generated: {}".format(tool_version, time.strftime("%c"))
+    s.font = Font(name="Segoe UI", size=10, color=HDR_FONT)
     s.fill = PatternFill("solid", fgColor=SUB_FILL)
     s.alignment = Alignment(horizontal="center", vertical="center")
     ws_sum.row_dimensions[2].height = 18
 
     # Meta info — label in A, value merged B:D
     meta = [
-        ("Target System", "{}/redfish/v1/".format(sut.rhost)),
+        ("Target System", sut.rhost),
         ("User", sut.username),
         ("Product", sut.product),
         ("Manufacturer", sut.manufacturer),
@@ -761,7 +922,7 @@ def xlsx_report(sut: SystemUnderTest, report_dir, time, tool_version):
         ("Firmware", sut.firmware_version),
     ]
     for i, (label, value) in enumerate(meta, start=3):
-        _cell(ws_sum, i, 1, label, bold=True, fill_hex=META_FILL, align="right")
+        _cell(ws_sum, i, 1, label, bold=True, color="6C757D", fill_hex=META_FILL, align="right")
         ws_sum.merge_cells(start_row=i, start_column=2, end_row=i, end_column=4)
         _cell(ws_sum, i, 2, value, fill_hex="FFFFFF")
         # Apply borders to every cell in the merged range so all edges are visible
@@ -770,16 +931,23 @@ def xlsx_report(sut: SystemUnderTest, report_dir, time, tool_version):
 
     # Blank row, then summary counters spanning A:D
     r = 3 + len(meta) + 1
-    for col, label in enumerate(["PASS", "WARN", "FAIL", "NOT TESTED"], start=1):
+    score_labels = [("✓  PASS", SCORE_PASS), ("⚠  WARN", SCORE_WARN),
+                    ("✗  FAIL", SCORE_FAIL), ("–  NOT TESTED", SCORE_SKIP)]
+    for col, (label, fill) in enumerate(score_labels, start=1):
         _cell(ws_sum, r, col, label, bold=True, color=HDR_FONT,
-              fill_hex=HDR_FILL, align="center")
+              fill_hex=fill, align="center")
+        ws_sum.row_dimensions[r].height = 22
     r += 1
-    fills  = [PASS_FILL,  WARN_FILL,  FAIL_FILL,  SKIP_FILL]
-    fonts  = [PASS_FONT,  WARN_FONT,  FAIL_FONT,  SKIP_FONT]
-    counts = [sut.pass_count, sut.warn_count, sut.fail_count, sut.skip_count]
-    for col, (fill, fnt, count) in enumerate(zip(fills, fonts, counts), start=1):
+    score_data = [
+        (sut.pass_count, PASS_FILL, PASS_FONT),
+        (sut.warn_count, WARN_FILL, WARN_FONT),
+        (sut.fail_count, FAIL_FILL, FAIL_FONT),
+        (sut.skip_count, SKIP_FILL, SKIP_FONT),
+    ]
+    for col, (count, fill, fnt) in enumerate(score_data, start=1):
         _cell(ws_sum, r, col, count, bold=True, color=fnt,
               fill_hex=fill, align="center")
+        ws_sum.row_dimensions[r].height = 28
 
     # Column widths — A (label) narrower, B-D equal data columns
     ws_sum.column_dimensions["A"].width = 20
@@ -798,9 +966,9 @@ def xlsx_report(sut: SystemUnderTest, report_dir, time, tool_version):
 
     for col, (hdr, width) in enumerate(zip(col_headers, col_widths), start=1):
         _cell(ws, 1, col, hdr, bold=True, color=HDR_FONT,
-              fill_hex=HDR_FILL, align="center")
+              fill_hex=SUB_FILL, align="center")
         ws.column_dimensions[get_column_letter(col)].width = width
-    ws.row_dimensions[1].height = 20
+    ws.row_dimensions[1].height = 22
     ws.freeze_panes = "A2"
 
     # Hide grid lines on results sheet
