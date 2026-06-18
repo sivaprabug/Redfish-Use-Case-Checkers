@@ -72,8 +72,8 @@ def main():
     # Get the current time for report files
     test_time = datetime.now()
 
-    # Create report directory with timestamped subfolder (YYYY-MM-DD-HH-SS)
-    report_dir = Path(args.report_dir) / test_time.strftime("%Y-%m-%d-%H-%S")
+    # Create report directory with timestamped subfolder (YYYY-MM-DD-HHMMSS)
+    report_dir = Path(args.report_dir) / test_time.strftime("%Y-%m-%d-%H%M%S")
     if not report_dir.is_dir():
         report_dir.mkdir(parents=True)
 
@@ -111,12 +111,10 @@ def main():
 
     print_summary(sut)
     print()
-    results_file = report.html_report(sut, report_dir, test_time, tool_version)
+    results_file = report.html_report(sut, report_dir, test_time, tool_version, vars(args))
     xlsx_file = report.xlsx_report(sut, report_dir, test_time, tool_version)
     print("HTML Report:  {}".format(results_file))
-    print()
     print("Excel Report: {}".format(xlsx_file))
-    print()
     print("Debug Log:    {}".format(log_file))
     print()
 

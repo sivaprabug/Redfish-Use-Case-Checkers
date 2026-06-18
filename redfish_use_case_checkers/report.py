@@ -20,204 +20,210 @@ html_template = """<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Redfish Use Case Checkers Report</title>
+  <title>Redfish Use Case Checkers &mdash; Test Report</title>
   <style>
     *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
-    :root {{
-      --primary:       #1a3a5c;
-      --primary-light: #0d6efd;
-      --accent:        #0d6efd;
-      --header-main-h: 56px;
-      --header-total-h: var(--header-main-h);
-      --pass-color:  #276749; --pass-bg:  #c6f6d5; --pass-border:  #38a169;
-      --warn-color:  #744210; --warn-bg:  #fefcbf; --warn-border:  #d69e2e;
-      --fail-color:  #742a2a; --fail-bg:  #fed7d7; --fail-border:  #e53e3e;
-      --skip-color:  #4a5568; --skip-bg:  #e2e8f0; --skip-border:  #a0aec0;
-      --border:   #dde3ec;
-      --text:     #1a1a2e;
-      --text-sub: #6c757d;
-      --bg:       #f0f2f5;
-      --card-bg:  #ffffff;
-    }}
+    html, body {{ height: 100%; }}
     body {{
       font-family: "Segoe UI", system-ui, Arial, sans-serif;
       font-size: 13px;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.5;
+      background: #f0f2f5;
+      color: #1a1a2e;
       display: flex;
       flex-direction: column;
     }}
 
-    /* ── Header ── */
-    .header {{
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 10px rgba(0,0,0,.35);
-    }}
-    .header-main {{
+    /* ════════════════════════════
+       TOP NAVBAR
+       ════════════════════════════ */
+    .top-nav {{
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 56px;
       background: linear-gradient(90deg, #0d1b2a 0%, #1a3a5c 60%, #1565c0 100%);
-      color: #fff;
+      display: flex;
+      align-items: center;
       padding: 0 16px;
-      height: var(--header-main-h);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
       gap: 10px;
-      position: relative;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.35);
     }}
-    .header-brand    {{ display: flex; align-items: center; gap: .9rem; }}
-    .header-logo img {{ height: 34px; border-radius: 4px; }}
-    .header-title    {{ font-size: 15px; font-weight: 700; letter-spacing: .3px; white-space: nowrap; }}
-    .header-subtitle {{ font-size: 11px; color: rgba(255,255,255,.55); white-space: nowrap; }}
-    .header-meta     {{ color: rgba(255,255,255,.7); font-size: 11px; text-align: right; line-height: 1.5; margin-left: auto; flex-shrink: 0; }}
-    .header-meta a   {{ color: #90caf9; text-decoration: none; }}
-    .header-meta a:hover {{ text-decoration: underline; }}
-    .header-filter-wrap {{
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 380px;
-    }}
-    .header-filter-shell {{ position: relative; width: 100%; }}
-    .header-filter-icon {{
-      position: absolute;
-      left: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: rgba(255,255,255,.5);
-      font-size: 14px;
-      pointer-events: none;
-    }}
-    .header-filter {{
-      width: 100%;
-      height: 30px;
-      border-radius: 20px;
-      border: 1px solid rgba(255,255,255,.35);
-      background: rgba(255,255,255,.12);
-      color: #f8fbff;
-      padding: 0 30px;
-      font-size: 12px;
-      font-family: "Cascadia Code", "Consolas", monospace;
-      outline: none;
-      transition: border-color .2s, box-shadow .2s;
-    }}
-    .header-filter::placeholder {{ color: rgba(255,255,255,.45); }}
-    .header-filter:focus {{
-      border-color: #90caf9;
-      box-shadow: 0 0 0 3px rgba(144,202,249,.2);
-      background: rgba(255,255,255,.18);
-    }}
-    .header-filter-clear {{
-      position: absolute;
-      right: 9px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      color: rgba(255,255,255,.5);
-      cursor: pointer;
-      font-size: 13px;
-      line-height: 1;
-      display: none;
-    }}
-    .header-filter-clear:hover {{ color: #ef5350; }}
-    .header-filter-note {{
-      font-size: 10px;
-      color: rgba(255,255,255,.5);
-      margin-top: 2px;
-      text-align: center;
+    .top-nav img {{ height: 34px; border-radius: 4px; flex-shrink: 0; }}
+    .nav-brand {{ flex-shrink: 0; }}
+    .top-nav-title {{
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
       white-space: nowrap;
     }}
-    .header-filter-note b {{ color: #90caf9; }}
+    .top-nav-sub {{
+      color: rgba(255,255,255,0.55);
+      font-size: 11px;
+      white-space: nowrap;
+    }}
+    .top-nav-search-wrap {{
+      position: absolute;
+      left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center;
+      width: 380px;
+      pointer-events: auto;
+    }}
+    .nav-filter-wrap {{ position: relative; width: 100%; }}
+    .nav-filter-wrap .fi {{
+      position: absolute; left: 10px; top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255,255,255,0.5); font-size: 14px;
+      pointer-events: none;
+    }}
+    #uriFilter {{
+      width: 100%;
+      padding: 6px 30px 6px 30px;
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 20px;
+      font-size: 12px; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      font-family: "Cascadia Code","Consolas",monospace;
+      color: #fff;
+      background: rgba(255,255,255,0.12);
+    }}
+    #uriFilter::placeholder {{ color: rgba(255,255,255,0.45); }}
+    #uriFilter:focus {{
+      border-color: #90caf9;
+      box-shadow: 0 0 0 3px rgba(144,202,249,0.2);
+      background: rgba(255,255,255,0.2);
+    }}
+    #filterClear {{
+      position: absolute; right: 9px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: rgba(255,255,255,0.5); font-size: 13px; line-height: 1;
+      display: none;
+    }}
+    #filterClear:hover {{ color: #ef5350; }}
+    .nav-filter-meta {{
+      font-size: 10px; color: rgba(255,255,255,0.5);
+      margin-top: 2px; text-align: center;
+    }}
+    .nav-filter-meta b {{ color: #90caf9; }}
+    .nav-hamburger {{
+      display: none;
+      align-items: center; justify-content: center;
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px; color: #fff; font-size: 18px;
+      cursor: pointer; flex-shrink: 0;
+    }}
+    .nav-hamburger:hover {{ background: rgba(255,255,255,0.2); }}
+    .top-nav-meta {{
+      color: rgba(255,255,255,0.7);
+      font-size: 11px;
+      text-align: right;
+      line-height: 1.5;
+      margin-left: auto;
+      flex-shrink: 0;
+    }}
+    .top-nav-meta a {{ color: #90caf9; text-decoration: none; }}
+    .top-nav-meta a:hover {{ text-decoration: underline; }}
 
-    /* ── Page layout ── */
-    .page-wrap {{ display: flex; align-items: flex-start; min-height: calc(100vh - var(--header-total-h)); }}
+    /* ════════════════════════════
+       APP SHELL  (sidebar + main)
+       ════════════════════════════ */
+    .app-shell {{
+      display: flex;
+      margin-top: 56px;
+      height: calc(100vh - 56px);
+      overflow: hidden;
+    }}
+    .sidebar-overlay {{
+      display: none;
+      position: fixed;
+      inset: 56px 0 0 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 99;
+    }}
+    .sidebar-overlay.show {{ display: block; }}
     .sidebar {{
       width: 300px;
-      flex-shrink: 0;
-      background: #ffffff;
+      min-width: 300px;
+      background: #fff;
       border-right: 1px solid #dde3ec;
-      box-shadow: 2px 0 8px rgba(0,0,0,.04);
-      padding: 16px 18px 10px;
-      position: sticky;
-      top: var(--header-total-h);
-      height: calc(100vh - var(--header-total-h));
+      height: 100%;
       overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+      z-index: 100;
+      transition: left 0.3s ease;
     }}
-    .main-content {{ flex: 1; min-width: 0; padding: 20px 24px 60px; overflow-y: auto; }}
+    .sidebar::-webkit-scrollbar {{ width: 5px; }}
+    .sidebar::-webkit-scrollbar-thumb {{ background: #c8d3e0; border-radius: 3px; }}
+    .main-content {{
+      flex: 1;
+      min-width: 0;
+      padding: 20px 24px 60px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      height: 100%;
+    }}
+    .main-content::-webkit-scrollbar {{ width: 6px; }}
+    .main-content::-webkit-scrollbar-thumb {{ background: #c8d3e0; border-radius: 3px; }}
+    a {{ color: #0d6efd; }}
 
-    /* ── Sidebar section headings ── */
-    .sb-heading {{
+    /* ── Sidebar sections ── */
+    .sidebar-section {{
+      padding: 16px 18px 10px;
+      border-bottom: 1px solid #edf0f5;
+    }}
+    .sidebar-section:last-child {{ border-bottom: none; }}
+    .sidebar-label {{
       font-size: 10px;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 1px;
       color: #8a97aa;
       margin-bottom: 10px;
+    }}
+
+    /* System info table in sidebar */
+    .sys-table {{ width: 100%; border-collapse: collapse; }}
+    .sys-table td {{
+      padding: 4px 0;
+      font-size: 12px;
       border: none;
       background: transparent;
-      padding: 0;
-      border-radius: 0;
-    }}
-    .sb-stats + .sb-heading {{ margin-top: 16px; }}
-
-    /* ── Sidebar info rows ── */
-    .sb-row {{
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: .5rem;
-      padding: 4px 0;
-      border-bottom: none;
-      font-size: 12px;
-    }}
-    .sb-row:last-of-type {{ border-bottom: none; }}
-    .sb-key {{
-      color: #6c757d;
-      font-size: 12px;
-      font-weight: 600;
-      white-space: nowrap;
-      flex-shrink: 0;
-      min-width: 90px;
-    }}
-    .sb-val {{
-      font-weight: 600;
+      vertical-align: top;
       color: #333;
       word-break: break-all;
-      text-align: right;
-      font-size: 12px;
+    }}
+    .sys-table td:first-child {{
+      font-weight: 600;
+      color: #6c757d;
+      white-space: nowrap;
+      padding-right: 10px;
+      min-width: 90px;
     }}
 
-    /* ── Sidebar summary stat blocks — 2×2 grid ── */
-    .sb-stats {{
+    /* Score tiles in sidebar */
+    .score-grid {{
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
-      margin-top: 0;
     }}
-    .sb-stat {{
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 10px 12px;
+    .score-tile {{
       border-radius: 8px;
-      font-weight: 700;
+      padding: 10px 12px;
       color: #fff;
       text-align: center;
-      min-height: 72px;
+      font-weight: 700;
     }}
-    .sb-stat-count {{ font-size: 26px; line-height: 1.1; letter-spacing: -.02em; }}
-    .sb-stat-label {{ font-size: 10px; text-transform: uppercase; letter-spacing: .7px; margin-top: 2px; opacity: .9; line-height: 1.2; }}
-    .sb-stat.pass {{ background: linear-gradient(135deg, #27ae60, #2ecc71); }}
-    .sb-stat.warn {{ background: linear-gradient(135deg, #d68910, #f39c12); }}
-    .sb-stat.fail {{ background: linear-gradient(135deg, #c0392b, #e74c3c); }}
-    .sb-stat.skip {{ background: linear-gradient(135deg, #5d6d7e, #85929e); }}
+    .score-tile .snum {{ font-size: 26px; line-height: 1.1; }}
+    .score-tile .slbl {{ font-size: 10px; text-transform: uppercase; letter-spacing: 0.7px; margin-top: 2px; opacity: 0.9; }}
+    .st-pass {{ background: linear-gradient(135deg, #27ae60, #2ecc71); }}
+    .st-warn {{ background: linear-gradient(135deg, #d68910, #f39c12); }}
+    .st-fail {{ background: linear-gradient(135deg, #c0392b, #e74c3c); }}
+    .st-skip {{ background: linear-gradient(135deg, #5d6d7e, #85929e); }}
 
     /* ── Section ── */
     .section {{ margin-bottom: 1.5rem; }}
@@ -239,7 +245,7 @@ html_template = """<!DOCTYPE html>
     .section-arrow {{ font-size: .7rem; color: #6c757d; transition: transform .2s; }}
     .section-header.collapsed .section-arrow {{ transform: rotate(-90deg); }}
     .section-body {{
-      border: 1px solid var(--border);
+      border: 1px solid #dde3ec;
       border-top: none;
       border-radius: 0 0 8px 8px;
       overflow: hidden;
@@ -248,7 +254,7 @@ html_template = """<!DOCTYPE html>
     }}
 
     /* ── Test block ── */
-    .test-block {{ border-bottom: 1px solid var(--border); }}
+    .test-block {{ border-bottom: 1px solid #dde3ec; }}
     .test-block:last-child {{ border-bottom: none; }}
     .test-heading {{
       background: #fff;
@@ -263,7 +269,7 @@ html_template = """<!DOCTYPE html>
     .test-name   {{ font-weight: 700; font-size: 13px; color: #0d1b2a; font-family: "Cascadia Code", "Consolas", monospace; }}
     .test-desc   {{ font-size: 11px; color: #6c757d; margin-top: .12rem; font-style: italic; }}
     .test-detail {{ font-size: 11px; color: #6c757d; margin-top: .08rem; font-style: italic; }}
-    .test-toggle {{ flex-shrink: 0; font-size: .65rem; color: var(--text-sub); margin-top: .3rem; transition: transform .2s; }}
+    .test-toggle {{ flex-shrink: 0; font-size: .65rem; color: #6c757d; margin-top: .3rem; transition: transform .2s; }}
     .test-body         {{ display: block; }}
     .test-body.hidden  {{ display: none; }}
 
@@ -329,39 +335,20 @@ html_template = """<!DOCTYPE html>
     .toolbar-btn:hover {{ background: #0b5ed7; }}
 
     /* ── Scroll-to-top ── */
-    #scroll-top {{
+    #scrollTopBtn {{
       position: fixed;
-      bottom: 2rem;
-      right: 2rem;
-      width: 42px;
-      height: 42px;
+      bottom: 24px; right: 24px;
+      width: 42px; height: 42px;
       border-radius: 50%;
-      background: #0d6efd;
-      color: #fff;
-      border: none;
-      font-size: 1.1rem;
-      cursor: pointer;
-      box-shadow: 0 4px 14px rgba(13,110,253,.45);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 200;
-      transition: background .15s, opacity .2s;
-    }}
-    #scroll-top:hover {{ background: #0b5ed7; }}
-    #scroll-top.visible {{ display: flex; }}
-
-    /* ── Footer ── */
-    .footer {{
+      background: #0d6efd; color: #fff;
+      border: none; cursor: pointer;
+      font-size: 20px; line-height: 42px;
       text-align: center;
-      font-size: .77rem;
-      color: var(--text-sub);
-      padding: 2rem 1rem;
-      border-top: 1px solid var(--border);
-      margin-top: 2rem;
+      box-shadow: 0 4px 14px rgba(13,110,253,0.45);
+      display: none; z-index: 1100;
+      transition: background 0.2s, transform 0.2s;
     }}
-    .footer a {{ color: var(--accent); text-decoration: none; }}
-    .footer a:hover {{ text-decoration: underline; }}
+    #scrollTopBtn:hover {{ background: #0b5ed7; transform: translateY(-2px); }}
 
     /* ── Inline result summary chips (at most 4 per test) ── */
     .result-chips {{ display: flex; gap: .4rem; margin-top: .45rem; flex-wrap: wrap; }}
@@ -370,10 +357,10 @@ html_template = """<!DOCTYPE html>
       padding: .22rem .75rem; border-radius: 9999px;
       font-size: .72rem; font-weight: 700; white-space: nowrap; cursor: default;
     }}
-    .rchip-pass {{ background: var(--pass-bg); color: var(--pass-color); border: 1px solid var(--pass-border); }}
-    .rchip-warn {{ background: var(--warn-bg); color: var(--warn-color); border: 1px solid var(--warn-border); }}
-    .rchip-fail {{ background: var(--fail-bg); color: var(--fail-color); border: 1px solid var(--fail-border); }}
-    .rchip-skip {{ background: var(--skip-bg); color: var(--skip-color); border: 1px solid var(--skip-border); }}
+    .rchip-pass {{ background: #c6f6d5; color: #276749; border: 1px solid #38a169; }}
+    .rchip-warn {{ background: #fefcbf; color: #744210; border: 1px solid #d69e2e; }}
+    .rchip-fail {{ background: #fed7d7; color: #742a2a; border: 1px solid #e53e3e; }}
+    .rchip-skip {{ background: #e2e8f0; color: #4a5568; border: 1px solid #a0aec0; }}
 
     /* ── Section count badges ── */
     .section-counts {{ display: flex; gap: .35rem; margin-left: auto; flex-shrink: 0; align-items: center; }}
@@ -384,154 +371,137 @@ html_template = """<!DOCTYPE html>
     .scnt-skip {{ background: #f5f7fa; color: #7f8c8d; }}
 
     /* ── Test block status left border ── */
-    .test-block.tb-fail {{ border-left: 4px solid var(--fail-border); }}
-    .test-block.tb-warn {{ border-left: 4px solid var(--warn-border); }}
-    .test-block.tb-pass {{ border-left: 4px solid var(--pass-border); }}
+    .test-block.tb-fail {{ border-left: 4px solid #e53e3e; }}
+    .test-block.tb-warn {{ border-left: 4px solid #d69e2e; }}
+    .test-block.tb-pass {{ border-left: 4px solid #38a169; }}
 
-    /* ── Sidebar progress bar ── */
-    .sb-pass-rate {{
-      text-align: center;
-      margin: .5rem 0 .65rem;
+    /* Configuration toggle */
+    .btn-config {{
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 12px; border-radius: 5px; cursor: pointer;
+      font-size: 11px; font-weight: 600; border: none;
+      background: #0d6efd; color: #fff;
+      transition: background 0.15s; user-select: none;
+      margin-bottom: 6px;
     }}
-    .sb-pass-rate-num {{
-      font-size: 1.9rem;
-      font-weight: 800;
-      color: #2d9e55;
-      letter-spacing: -.03em;
-      line-height: 1;
+    .btn-config:hover {{ background: #0b5ed7; }}
+    .config-panel {{ display: none; }}
+    .config-panel.open {{ display: block; }}
+    .config-table {{
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 6px;
     }}
-    .sb-pass-rate-sub {{
-      font-size: .62rem;
-      color: #64748b;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .07em;
-      margin-top: .18rem;
+    .config-table tr:nth-child(even) td {{ background: #f5f7fa; }}
+    .config-table tr:nth-child(odd) td {{ background: #ffffff; }}
+    .config-table td {{
+      padding: 5px 8px;
+      border: 1px solid #dde3ec;
+      vertical-align: top;
+      word-break: break-all;
+      color: #333;
     }}
-    .sb-prog-bar {{
-      height: 12px;
-      border-radius: 6px;
-      overflow: hidden;
-      display: flex;
-      background: #f0f3f7;
-      margin-bottom: .3rem;
-    }}
-    .sb-prog-seg {{
-      height: 100%;
-      width: 0%;
-      transition: width 1.2s cubic-bezier(.4,0,.2,1);
-    }}
-    .sb-prog-seg.pass {{ background: #2d9e55; }}
-    .sb-prog-seg.warn {{ background: #c98209; }}
-    .sb-prog-seg.fail {{ background: #c0392b; }}
-    .sb-prog-seg.skip {{ background: #cbd5e1; }}
-    .sb-prog-labels {{ display: flex; }}
-    .sb-prog-lbl {{
-      font-size: .62rem;
+    .config-table td:first-child {{
       font-weight: 700;
-      text-align: center;
-      overflow: hidden;
+      color: #1a3a5c;
       white-space: nowrap;
-      width: 0%;
-      transition: width 1.2s cubic-bezier(.4,0,.2,1);
+      width: 45%;
+      background: #eef4fb;
     }}
-    .sb-prog-lbl.pass {{ color: #2d9e55; }}
-    .sb-prog-lbl.warn {{ color: #c98209; }}
-    .sb-prog-lbl.fail {{ color: #c0392b; }}
-    .sb-prog-lbl.skip {{ color: #94a3b8; }}
+    .config-table td:last-child {{
+      font-weight: 400;
+      color: #444;
+    }}
 
     @media (max-width: 860px) {{
-      .header-filter-wrap {{ width: 240px; }}
-      .header-meta {{ display: none; }}
+      .nav-hamburger {{ display: flex; }}
+      .top-nav-search-wrap {{ width: 240px; }}
+      .top-nav-meta {{ display: none; }}
+      .sidebar {{
+        position: fixed;
+        left: -300px;
+        top: 56px;
+        height: calc(100vh - 56px);
+      }}
+      .sidebar.open {{ left: 0; }}
+      .main-content {{ width: 100%; }}
     }}
-
     @media (max-width: 540px) {{
-      .header-main {{ padding: 0 10px; }}
-      .header-logo img {{ height: 28px; }}
-      .header-brand > div:last-child {{ display: none; }}
-      .header-filter-wrap {{ width: 180px; }}
-      .sidebar {{ width: 260px; }}
+      .top-nav {{ padding: 0 10px; gap: 8px; }}
+      .top-nav img {{ height: 28px; }}
+      .nav-brand {{ display: none; }}
+      .top-nav-search-wrap {{ width: 180px; }}
     }}
   </style>
 </head>
 <body>
 
-<header class="header">
-  <div class="header-main">
-    <div class="header-brand">
-      <div class="header-logo">
-        <img src="data:image/gif;base64,{}" alt="DMTF Redfish Logo">
-      </div>
-      <div>
-        <div class="header-title">Redfish Use Case Checkers</div>
-        <div class="header-subtitle">Test Report</div>
-      </div>
-    </div>
-
-    <div class="header-filter-wrap">
-      <div class="header-filter-shell">
-        <span class="header-filter-icon">&#8260;</span>
-        <input id="header-uri-filter" class="header-filter" type="text" placeholder="Filter by Use Case..." aria-label="Filter by Use Case" autocomplete="off">
-        <button id="header-filter-clear" class="header-filter-clear" title="Clear">&#10005;</button>
-      </div>
-      <div class="header-filter-note">Showing <b id="header-filter-count">...</b> test blocks</div>
-    </div>
-
-    <div class="header-meta">
-      Version: {} &nbsp;|&nbsp; Generated: {}<br>
-      <a href="https://github.com/DMTF/Redfish-Use-Case-Checkers">github.com/DMTF/Redfish-Use-Case-Checkers</a>
-    </div>
+<nav class="top-nav">
+  <button class="nav-hamburger" id="hamburgerBtn" onclick="toggleSidebar()" title="Menu">&#9776;</button>
+  <img alt="DMTF Redfish Logo" src="data:image/gif;base64,{}"/>
+  <div class="nav-brand">
+    <div class="top-nav-title">Redfish Use Case Checkers</div>
+    <div class="top-nav-sub">Test Report</div>
   </div>
-</header>
+  <div class="top-nav-search-wrap">
+    <div class="nav-filter-wrap">
+      <span class="fi">&#8260;</span>
+      <input id="uriFilter" type="text" placeholder="Filter by Use Case&hellip;" autocomplete="off"/>
+      <button id="filterClear" onclick="clearFilter()" title="Clear">&#10005;</button>
+    </div>
+    <div class="nav-filter-meta">Showing <b id="filterCount">&#8230;</b> test blocks</div>
+  </div>
+  <div class="top-nav-meta">
+    Version: {} &nbsp;|&nbsp; Generated: {}<br/>
+    <a href="https://github.com/DMTF/Redfish-Use-Case-Checkers" target="_blank">DMTF/Redfish-Use-Case-Checkers</a>
+  </div>
+</nav>
 
-<div class="page-wrap">
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<div class="app-shell">
 
   <aside class="sidebar">
-    <div class="sb-heading">System Under Test</div>
-    <div class="sb-row"><span class="sb-key">Host</span><span class="sb-val">{}</span></div>
-    <div class="sb-row"><span class="sb-key">User</span><span class="sb-val"><strong>{}</strong></span></div>
-    <div class="sb-row"><span class="sb-key">Password</span><span class="sb-val">{}</span></div>
-    <div class="sb-row"><span class="sb-key">Product</span><span class="sb-val">{}</span></div>
-    <div class="sb-row"><span class="sb-key">Manufacturer</span><span class="sb-val">{}</span></div>
-    <div class="sb-row"><span class="sb-key">Model</span><span class="sb-val">{}</span></div>
-    <div class="sb-row"><span class="sb-key">Firmware</span><span class="sb-val">{}</span></div>
-    <div class="sb-heading" style="margin-top:1.25rem">Results Summary</div>
-    <div class="sb-stats">
-      <div class="sb-stat pass">
-        <span class="sb-stat-count">{}</span>
-        <span class="sb-stat-label">&#10003;<br>Pass</span>
-      </div>
-      <div class="sb-stat warn">
-        <span class="sb-stat-count">{}</span>
-        <span class="sb-stat-label">&#9888;<br>Warning</span>
-      </div>
-      <div class="sb-stat fail">
-        <span class="sb-stat-count">{}</span>
-        <span class="sb-stat-label">&#10007;<br>Fail</span>
-      </div>
-      <div class="sb-stat skip">
-        <span class="sb-stat-count">{}</span>
-        <span class="sb-stat-label">&ndash;<br>Not Tested</span>
+
+    <!-- System Info -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">System Under Test</div>
+      <table class="sys-table">
+        <tr><td>Host</td><td>{}</td></tr>
+        <tr><td>User</td><td>{}</td></tr>
+        <tr><td>Password</td><td>{}</td></tr>
+        <tr><td>Product</td><td>{}</td></tr>
+        <tr><td>Manufacturer</td><td>{}</td></tr>
+        <tr><td>Model</td><td>{}</td></tr>
+        <tr><td>Firmware</td><td>{}</td></tr>
+      </table>
+    </div>
+
+    <!-- Score tiles -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Results Summary</div>
+      <div class="score-grid">
+        <div class="score-tile st-pass"><div class="snum">{}</div><div class="slbl">&#10003; Pass</div></div>
+        <div class="score-tile st-warn"><div class="snum">{}</div><div class="slbl">&#9888; Warning</div></div>
+        <div class="score-tile st-fail"><div class="snum">{}</div><div class="slbl">&#10007; Fail</div></div>
+        <div class="score-tile st-skip"><div class="snum">{}</div><div class="slbl">&#8212; Not Tested</div></div>
       </div>
     </div>
 
-    <div class="sb-heading" style="margin-top:1.25rem">Pass Rate</div>
-    <div class="sb-pass-rate">
-      <div class="sb-pass-rate-num" id="pass-rate-pct">—</div>
-      <div class="sb-pass-rate-sub">of all checks passed</div>
+    <!-- Configuration -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Configuration</div>
+      <span class="btn-config" id="btnConfig"
+        onclick="(function(){{var p=document.getElementById('configPanel'),b=document.getElementById('btnConfig');if(p.classList.contains('open')){{p.classList.remove('open');b.innerHTML='&#9881; Show Configuration';}}else{{p.classList.add('open');b.innerHTML='&#9650; Hide Configuration';}}}})()">
+        &#9881; Show Configuration
+      </span>
+      <div class="config-panel" id="configPanel">
+        <table class="config-table">
+          {}
+        </table>
+      </div>
     </div>
-    <div class="sb-prog-bar">
-      <div class="sb-prog-seg pass" id="pseg-pass"></div>
-      <div class="sb-prog-seg warn" id="pseg-warn"></div>
-      <div class="sb-prog-seg fail" id="pseg-fail"></div>
-      <div class="sb-prog-seg skip" id="pseg-skip"></div>
-    </div>
-    <div class="sb-prog-labels">
-      <div class="sb-prog-lbl pass" id="plbl-pass"></div>
-      <div class="sb-prog-lbl warn" id="plbl-warn"></div>
-      <div class="sb-prog-lbl fail" id="plbl-fail"></div>
-      <div class="sb-prog-lbl skip" id="plbl-skip"></div>
-    </div>
+
   </aside>
 
   <div class="main-content">
@@ -544,18 +514,12 @@ html_template = """<!DOCTYPE html>
 
   </div>
 
-</div>
+</div><!-- /app-shell -->
 
-<button id="scroll-top" title="Back to top" onclick="window.scrollTo({{top:0,behavior:'smooth'}})">
+<button id="scrollTopBtn" title="Back to top"
+  onclick="document.querySelector('.main-content').scrollTo({{top:0,behavior:'smooth'}})">
   &#8679;
 </button>
-
-<footer class="footer">
-  This report was generated by the
-  <a href="https://github.com/DMTF/Redfish-Use-Case-Checkers">DMTF Redfish Use Case Checkers</a>.
-  For feedback, please
-  <a href="https://github.com/DMTF/Redfish-Use-Case-Checkers/issues">open an issue</a>.
-</footer>
 
 <script>
   /* Section collapse/expand */
@@ -608,52 +572,16 @@ html_template = """<!DOCTYPE html>
   }}
 
   /* Scroll-to-top button */
-  var scrollBtn = document.getElementById('scroll-top');
-  window.addEventListener('scroll', function() {{
-    if (window.scrollY > 400) {{
-      scrollBtn.classList.add('visible');
-    }} else {{
-      scrollBtn.classList.remove('visible');
-    }}
+  document.querySelector('.main-content').addEventListener('scroll', function() {{
+    document.getElementById('scrollTopBtn').style.display =
+      this.scrollTop > 200 ? 'block' : 'none';
   }});
 
-  /* ── Pass-rate progress bar animation ── */
+  /* URI filter */
   (function() {{
-    var keys = ['pass', 'warn', 'fail', 'skip'];
-    var counts = {{}};
-    var total = 0;
-    keys.forEach(function(k) {{
-      var el = document.querySelector('.sb-stat.' + k + ' .sb-stat-count');
-      counts[k] = el ? (parseInt(el.textContent, 10) || 0) : 0;
-      total += counts[k];
-    }});
-    if (!total) return;
-
-    /* Show overall pass-rate number immediately */
-    var pctPass = (counts.pass / total * 100);
-    var pctEl = document.getElementById('pass-rate-pct');
-    if (pctEl) pctEl.textContent = pctPass.toFixed(1) + '%';
-
-    /* Animate bars after a short paint delay */
-    setTimeout(function() {{
-      keys.forEach(function(k) {{
-        var pct = (counts[k] / total * 100);
-        var seg = document.getElementById('pseg-' + k);
-        var lbl = document.getElementById('plbl-' + k);
-        if (seg) seg.style.width = pct.toFixed(3) + '%';
-        if (lbl) {{
-          lbl.style.width = pct.toFixed(3) + '%';
-          lbl.textContent = counts[k] > 0 ? pct.toFixed(1) + '%' : '';
-        }}
-      }});
-    }}, 120);
-  }})();
-
-  /* Header URI filter (section and test title text match) */
-  (function() {{
-    var filter = document.getElementById('header-uri-filter');
-    var clearBtn = document.getElementById('header-filter-clear');
-    var countEl = document.getElementById('header-filter-count');
+    var filter = document.getElementById('uriFilter');
+    var clearBtn = document.getElementById('filterClear');
+    var countEl = document.getElementById('filterCount');
     if (!filter) return;
 
     function updateCount() {{
@@ -662,15 +590,8 @@ html_template = """<!DOCTYPE html>
       document.querySelectorAll('.test-block').forEach(function(tb) {{
         if (tb.style.display !== 'none') visibleTests += 1;
       }});
-      if (countEl) countEl.textContent = visibleTests + ' / ' + allTests;
+      if (countEl) countEl.innerHTML = '<b>' + visibleTests + '</b> / ' + allTests;
       if (clearBtn) clearBtn.style.display = filter.value.trim() ? 'block' : 'none';
-    }}
-
-    if (clearBtn) {{
-      clearBtn.addEventListener('click', function() {{
-        filter.value = '';
-        filter.dispatchEvent(new Event('input'));
-      }});
     }}
 
     filter.addEventListener('input', function() {{
@@ -706,6 +627,19 @@ html_template = """<!DOCTYPE html>
 
     updateCount();
   }})();
+
+  /* Mobile sidebar toggle */
+  function toggleSidebar() {{
+    var sb = document.querySelector('.sidebar');
+    var ov = document.getElementById('sidebarOverlay');
+    var open = sb.classList.toggle('open');
+    ov.classList.toggle('show', open);
+  }}
+
+  function clearFilter() {{
+    document.getElementById('uriFilter').value = '';
+    document.getElementById('uriFilter').dispatchEvent(new Event('input'));
+  }}
 </script>
 
 </body>
@@ -713,7 +647,7 @@ html_template = """<!DOCTYPE html>
 """
 
 
-def html_report(sut: SystemUnderTest, report_dir, time, tool_version):
+def html_report(sut: SystemUnderTest, report_dir, time, tool_version, args=None):
     """
     Creates the HTML report for the system under test
 
@@ -813,6 +747,21 @@ def html_report(sut: SystemUnderTest, report_dir, time, tool_version):
         html += '</div>'  # section-body
         html += '</div>'  # section
 
+    config_rows_html = ""
+    if args:
+        for key, val in sorted(args.items()):
+            if val is None:
+                val = ""
+            elif isinstance(val, list):
+                val = " ".join(str(v) for v in val)
+            else:
+                val = str(val)
+            if key in ("password",):
+                val = "********" if val else ""
+            config_rows_html += "<tr><td>{}</td><td>{}</td></tr>".format(
+                html_mod.escape(key), html_mod.escape(val)
+            )
+
     with open(str(file), "w", encoding="utf-8") as fd:
         fd.write(
             html_template.format(
@@ -830,6 +779,7 @@ def html_report(sut: SystemUnderTest, report_dir, time, tool_version):
                 sut.warn_count,
                 sut.fail_count,
                 sut.skip_count,
+                config_rows_html,
                 html,
             )
         )
