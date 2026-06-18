@@ -14,8 +14,6 @@ Brief : This file contains the definitions and functionalities for invoking
 import argparse
 import colorama
 import logging
-# import warnings
-# warnings.filterwarnings("ignore", category=Warning, module="requests")
 import redfish
 import sys
 from datetime import datetime
