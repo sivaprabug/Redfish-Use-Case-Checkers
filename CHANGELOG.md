@@ -1,5 +1,8 @@
 # Change Log
 
+## [2.0.9] - 2026-06-19
+- Updated the HTML report output to align with updates to the Redfish Service Validator
+
 ## [2.0.8] - 2026-03-13
 - Corrected version of Tacklebox referenced in setup.py for distribution
 
