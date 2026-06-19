@@ -67,13 +67,13 @@ def main():
     )
     args = argget.parse_args()
 
-    # Create report directory if needed
-    report_dir = Path(args.report_dir)
-    if not report_dir.is_dir():
-        report_dir.mkdir(parents=True)
-
     # Get the current time for report files
     test_time = datetime.now()
+
+    # Create report directory with timestamped subfolder (YYYY-MM-DD-HHMMSS)
+    report_dir = Path(args.report_dir) / test_time.strftime("%Y-%m-%d-%H%M%S")
+    if not report_dir.is_dir():
+        report_dir.mkdir(parents=True)
 
     # Set the logging level
     log_level = logging.INFO
@@ -108,9 +108,13 @@ def main():
     sut.logout()
 
     print_summary(sut)
-    results_file = report.html_report(sut, report_dir, test_time, tool_version)
-    print("HTML Report: {}".format(results_file))
-    print("Debug Log: {}".format(log_file))
+    print()
+    results_file = report.html_report(sut, report_dir, test_time, tool_version, vars(args))
+    xlsx_file = report.xlsx_report(sut, report_dir, test_time, tool_version)
+    print("HTML Report:  {}".format(results_file))
+    print("Excel Report: {}".format(xlsx_file))
+    print("Debug Log:    {}".format(log_file))
+    print()
 
     # Exit with status 1 if there are any failures; 0 otherwise
     sys.exit(int(sut.fail_count > 0))
@@ -147,21 +151,24 @@ def print_summary(sut):
     warn_start, warned, warn_end = summary_format("WARN", sut.warn_count)
     fail_start, failed, fail_end = summary_format("FAIL", sut.fail_count)
     no_test_start, not_tested, no_test_end = summary_format("SKIP", sut.skip_count)
-    print(
-        "Summary - %sPASS: %s%s, %sWARN: %s%s, %sFAIL: %s%s, %sNOT TESTED: %s%s"
-        % (
-            pass_start,
-            passed,
-            pass_end,
-            warn_start,
-            warned,
-            warn_end,
-            fail_start,
-            failed,
-            fail_end,
-            no_test_start,
-            not_tested,
-            no_test_end,
-        )
+
+    col_w = 14
+    sep = "+" + ("-" * col_w + "+") * 4
+    header = "| {:^{w}} | {:^{w}} | {:^{w}} | {:^{w}} |".format(
+        "PASS", "WARN", "FAIL", "NOT TESTED", w=col_w - 2
     )
+    values = "| {}{:^{w}}{} | {}{:^{w}}{} | {}{:^{w}}{} | {}{:^{w}}{} |".format(
+        pass_start, str(passed), pass_end,
+        warn_start, str(warned), warn_end,
+        fail_start, str(failed), fail_end,
+        no_test_start, str(not_tested), no_test_end,
+        w=col_w - 2,
+    )
+    print()
+    print(sep)
+    print(header)
+    print(sep)
+    print(values)
+    print(sep)
+    print()
     colorama.deinit()
