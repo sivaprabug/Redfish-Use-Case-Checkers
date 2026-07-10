@@ -2,3 +2,4 @@ colorama
 openpyxl
 redfish>=3.0.0
 redfish_utilities>=3.4.3
+redfish_service_validator>=3.1.6
