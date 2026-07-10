@@ -12,222 +12,14 @@ from openpyxl.styles import (
 )
 from openpyxl.utils import get_column_letter
 
-from redfish_use_case_checkers import redfish_logo
+from redfish_service_validator.html_template import build_html_report
 from redfish_use_case_checkers.system_under_test import SystemUnderTest
 
-html_template = """<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Redfish Use Case Checkers &mdash; Test Report</title>
-  <style>
-    *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
-    html, body {{ height: 100%; }}
-    body {{
-      font-family: "Segoe UI", system-ui, Arial, sans-serif;
-      font-size: 13px;
-      background: #f0f2f5;
-      color: #1a1a2e;
-      display: flex;
-      flex-direction: column;
-    }}
-
-    /* ════════════════════════════
-       TOP NAVBAR
-       ════════════════════════════ */
-    .top-nav {{
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      height: 56px;
-      background: linear-gradient(90deg, #0d1b2a 0%, #1a3a5c 60%, #1565c0 100%);
-      display: flex;
-      align-items: center;
-      padding: 0 16px;
-      gap: 10px;
-      z-index: 1000;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.35);
-    }}
-    .top-nav img {{ height: 34px; border-radius: 4px; flex-shrink: 0; }}
-    .nav-brand {{ flex-shrink: 0; }}
-    .top-nav-title {{
-      color: #fff;
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: 0.3px;
-      white-space: nowrap;
-    }}
-    .top-nav-sub {{
-      color: rgba(255,255,255,0.55);
-      font-size: 11px;
-      white-space: nowrap;
-    }}
-    .top-nav-search-wrap {{
-      position: absolute;
-      left: 50%; transform: translateX(-50%);
-      display: flex; flex-direction: column; align-items: center;
-      width: 380px;
-      pointer-events: auto;
-    }}
-    .nav-filter-wrap {{ position: relative; width: 100%; }}
-    .nav-filter-wrap .fi {{
-      position: absolute; left: 10px; top: 50%;
-      transform: translateY(-50%);
-      color: rgba(255,255,255,0.5); font-size: 14px;
-      pointer-events: none;
-    }}
-    #uriFilter {{
-      width: 100%;
-      padding: 6px 30px 6px 30px;
-      border: 1px solid rgba(255,255,255,0.25);
-      border-radius: 20px;
-      font-size: 12px; outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      font-family: "Cascadia Code","Consolas",monospace;
-      color: #fff;
-      background: rgba(255,255,255,0.12);
-    }}
-    #uriFilter::placeholder {{ color: rgba(255,255,255,0.45); }}
-    #uriFilter:focus {{
-      border-color: #90caf9;
-      box-shadow: 0 0 0 3px rgba(144,202,249,0.2);
-      background: rgba(255,255,255,0.2);
-    }}
-    #filterClear {{
-      position: absolute; right: 9px; top: 50%;
-      transform: translateY(-50%);
-      background: none; border: none; cursor: pointer;
-      color: rgba(255,255,255,0.5); font-size: 13px; line-height: 1;
-      display: none;
-    }}
-    #filterClear:hover {{ color: #ef5350; }}
-    .nav-filter-meta {{
-      font-size: 10px; color: rgba(255,255,255,0.5);
-      margin-top: 2px; text-align: center;
-    }}
-    .nav-filter-meta b {{ color: #90caf9; }}
-    .nav-hamburger {{
-      display: none;
-      align-items: center; justify-content: center;
-      width: 36px; height: 36px;
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 6px; color: #fff; font-size: 18px;
-      cursor: pointer; flex-shrink: 0;
-    }}
-    .nav-hamburger:hover {{ background: rgba(255,255,255,0.2); }}
-    .top-nav-meta {{
-      color: rgba(255,255,255,0.7);
-      font-size: 11px;
-      text-align: right;
-      line-height: 1.5;
-      margin-left: auto;
-      flex-shrink: 0;
-    }}
-    .top-nav-meta a {{ color: #90caf9; text-decoration: none; }}
-    .top-nav-meta a:hover {{ text-decoration: underline; }}
-
-    /* ════════════════════════════
-       APP SHELL  (sidebar + main)
-       ════════════════════════════ */
-    .app-shell {{
-      display: flex;
-      margin-top: 56px;
-      height: calc(100vh - 56px);
-      overflow: hidden;
-    }}
-    .sidebar-overlay {{
-      display: none;
-      position: fixed;
-      inset: 56px 0 0 0;
-      background: rgba(0,0,0,0.45);
-      z-index: 99;
-    }}
-    .sidebar-overlay.show {{ display: block; }}
-    .sidebar {{
-      width: 300px;
-      min-width: 300px;
-      background: #fff;
-      border-right: 1px solid #dde3ec;
-      height: 100%;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 2px 0 8px rgba(0,0,0,0.04);
-      z-index: 100;
-      transition: left 0.3s ease;
-    }}
-    .sidebar::-webkit-scrollbar {{ width: 5px; }}
-    .sidebar::-webkit-scrollbar-thumb {{ background: #c8d3e0; border-radius: 3px; }}
-    .main-content {{
-      flex: 1;
-      min-width: 0;
-      padding: 20px 24px 60px;
-      overflow-y: auto;
-      overflow-x: hidden;
-      height: 100%;
-    }}
-    .main-content::-webkit-scrollbar {{ width: 6px; }}
-    .main-content::-webkit-scrollbar-thumb {{ background: #c8d3e0; border-radius: 3px; }}
-    a {{ color: #0d6efd; }}
-
-    /* ── Sidebar sections ── */
-    .sidebar-section {{
-      padding: 16px 18px 10px;
-      border-bottom: 1px solid #edf0f5;
-    }}
-    .sidebar-section:last-child {{ border-bottom: none; }}
-    .sidebar-label {{
-      font-size: 10px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #8a97aa;
-      margin-bottom: 10px;
-    }}
-
-    /* System info table in sidebar */
-    .sys-table {{ width: 100%; border-collapse: collapse; }}
-    .sys-table td {{
-      padding: 4px 0;
-      font-size: 12px;
-      border: none;
-      background: transparent;
-      vertical-align: top;
-      color: #333;
-      word-break: break-all;
-    }}
-    .sys-table td:first-child {{
-      font-weight: 600;
-      color: #6c757d;
-      white-space: nowrap;
-      padding-right: 10px;
-      min-width: 90px;
-    }}
-
-    /* Score tiles in sidebar */
-    .score-grid {{
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }}
-    .score-tile {{
-      border-radius: 8px;
-      padding: 10px 12px;
-      color: #fff;
-      text-align: center;
-      font-weight: 700;
-    }}
-    .score-tile .snum {{ font-size: 26px; line-height: 1.1; }}
-    .score-tile .slbl {{ font-size: 10px; text-transform: uppercase; letter-spacing: 0.7px; margin-top: 2px; opacity: 0.9; }}
-    .st-pass {{ background: linear-gradient(135deg, #27ae60, #2ecc71); }}
-    .st-warn {{ background: linear-gradient(135deg, #d68910, #f39c12); }}
-    .st-fail {{ background: linear-gradient(135deg, #c0392b, #e74c3c); }}
-    .st-skip {{ background: linear-gradient(135deg, #5d6d7e, #85929e); }}
+_RUCC_EXTRA_CSS = r"""
 
     /* ── Section ── */
-    .section {{ margin-bottom: 1.5rem; }}
-    .section-header {{
+    .section { margin-bottom: 1.5rem; }
+    .section-header {
       background: #f7f9fc;
       color: #0d1b2a;
       padding: 10px 16px;
@@ -241,22 +33,22 @@ html_template = """<!DOCTYPE html>
       cursor: pointer;
       user-select: none;
       border-bottom: 1px solid #dde3ec;
-    }}
-    .section-arrow {{ font-size: .7rem; color: #6c757d; transition: transform .2s; }}
-    .section-header.collapsed .section-arrow {{ transform: rotate(-90deg); }}
-    .section-body {{
+    }
+    .section-arrow { font-size: .7rem; color: #6c757d; transition: transform .2s; }
+    .section-header.collapsed .section-arrow { transform: rotate(-90deg); }
+    .section-body {
       border: 1px solid #dde3ec;
       border-top: none;
       border-radius: 0 0 8px 8px;
       overflow: hidden;
       box-shadow: 0 1px 3px rgba(0,0,0,.05);
       margin-bottom: 8px;
-    }}
+    }
 
     /* ── Test block ── */
-    .test-block {{ border-bottom: 1px solid #dde3ec; }}
-    .test-block:last-child {{ border-bottom: none; }}
-    .test-heading {{
+    .test-block { border-bottom: 1px solid #dde3ec; }
+    .test-block:last-child { border-bottom: none; }
+    .test-heading {
       background: #fff;
       padding: 10px 16px;
       cursor: pointer;
@@ -264,41 +56,41 @@ html_template = """<!DOCTYPE html>
       justify-content: space-between;
       align-items: flex-start;
       gap: 1rem;
-    }}
-    .test-heading:hover {{ background: #f8fafc; }}
-    .test-name   {{ font-weight: 700; font-size: 13px; color: #0d1b2a; font-family: "Cascadia Code", "Consolas", monospace; }}
-    .test-desc   {{ font-size: 11px; color: #6c757d; margin-top: .12rem; font-style: italic; }}
-    .test-detail {{ font-size: 11px; color: #6c757d; margin-top: .08rem; font-style: italic; }}
-    .test-toggle {{ flex-shrink: 0; font-size: .65rem; color: #6c757d; margin-top: .3rem; transition: transform .2s; }}
-    .test-body         {{ display: block; }}
-    .test-body.hidden  {{ display: none; }}
+    }
+    .test-heading:hover { background: #f8fafc; }
+    .test-name   { font-weight: 700; font-size: 13px; color: #0d1b2a; font-family: "Cascadia Code", "Consolas", monospace; }
+    .test-desc   { font-size: 11px; color: #6c757d; margin-top: .12rem; font-style: italic; }
+    .test-detail { font-size: 11px; color: #6c757d; margin-top: .08rem; font-style: italic; }
+    .test-toggle { flex-shrink: 0; font-size: .65rem; color: #6c757d; margin-top: .3rem; transition: transform .2s; }
+    .test-body        { display: block; }
+    .test-body.hidden { display: none; }
 
     /* ── Results table ── */
-    .test-results-table {{ width: 100%; border-collapse: collapse; font-size: 12px; }}
-    .test-results-table thead tr {{ background: #f0f4f8; }}
-    .test-results-table th {{
+    .test-results-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .test-results-table thead tr { background: #f0f4f8; }
+    .test-results-table th {
       padding: 7px 12px;
       text-align: left;
       font-weight: 700;
       font-size: 11px;
       color: #2c3e50;
       border-bottom: 2px solid #dde3ec;
-    }}
-    .test-results-table td {{
+    }
+    .test-results-table td {
       padding: 5px 12px;
       border-bottom: 1px solid #f0f2f5;
       vertical-align: top;
       color: #333;
       background: #fff;
-    }}
-    .test-results-table tr:last-child td {{ border-bottom: none; }}
-    .test-results-table tr:hover td {{ background: #f8fafc; }}
-    .col-op     {{ width: 38%; }}
-    .col-result {{ width:  9%; white-space: nowrap; }}
-    .col-msg    {{ width: 53%; }}
+    }
+    .test-results-table tr:last-child td { border-bottom: none; }
+    .test-results-table tr:hover td { background: #f8fafc; }
+    .col-op     { width: 38%; }
+    .col-result { width:  9%; white-space: nowrap; }
+    .col-msg    { width: 53%; }
 
     /* ── Badges ── */
-    .badge {{
+    .badge {
       display: inline-block;
       padding: .15rem .55rem;
       border-radius: 9999px;
@@ -306,20 +98,16 @@ html_template = """<!DOCTYPE html>
       font-weight: 700;
       letter-spacing: .04em;
       text-transform: uppercase;
-    }}
-    .badge-pass {{ background: #d4edda; color: #145a32; }}
-    .badge-warn {{ background: #fff3cd; color: #7d6008; }}
-    .badge-fail {{ background: #f8d7da; color: #7b241c; }}
-    .badge-skip {{ background: #f5f7fa; color: #7f8c8d; }}
+    }
 
     /* ── Toolbar ── */
-    .toolbar {{
+    .toolbar {
       display: flex;
       align-items: center;
       gap: .6rem;
       margin-bottom: 1rem;
-    }}
-    .toolbar-btn {{
+    }
+    .toolbar-btn {
       background: #0d6efd;
       color: #fff;
       border: none;
@@ -331,320 +119,145 @@ html_template = """<!DOCTYPE html>
       letter-spacing: .02em;
       transition: background .15s;
       box-shadow: 0 2px 5px rgba(13,110,253,.3);
-    }}
-    .toolbar-btn:hover {{ background: #0b5ed7; }}
+    }
+    .toolbar-btn:hover { background: #0b5ed7; }
 
-    /* ── Scroll-to-top ── */
-    #scrollTopBtn {{
-      position: fixed;
-      bottom: 24px; right: 24px;
-      width: 42px; height: 42px;
-      border-radius: 50%;
-      background: #0d6efd; color: #fff;
-      border: none; cursor: pointer;
-      font-size: 20px; line-height: 42px;
-      text-align: center;
-      box-shadow: 0 4px 14px rgba(13,110,253,0.45);
-      display: none; z-index: 1100;
-      transition: background 0.2s, transform 0.2s;
-    }}
-    #scrollTopBtn:hover {{ background: #0b5ed7; transform: translateY(-2px); }}
-
-    /* ── Inline result summary chips (at most 4 per test) ── */
-    .result-chips {{ display: flex; gap: .4rem; margin-top: .45rem; flex-wrap: wrap; }}
-    .rchip {{
+    /* ── Inline result summary chips ── */
+    .result-chips { display: flex; gap: .4rem; margin-top: .45rem; flex-wrap: wrap; }
+    .rchip {
       display: inline-flex; align-items: center; gap: .3rem;
       padding: .22rem .75rem; border-radius: 9999px;
       font-size: .72rem; font-weight: 700; white-space: nowrap; cursor: default;
-    }}
-    .rchip-pass {{ background: #c6f6d5; color: #276749; border: 1px solid #38a169; }}
-    .rchip-warn {{ background: #fefcbf; color: #744210; border: 1px solid #d69e2e; }}
-    .rchip-fail {{ background: #fed7d7; color: #742a2a; border: 1px solid #e53e3e; }}
-    .rchip-skip {{ background: #e2e8f0; color: #4a5568; border: 1px solid #a0aec0; }}
+    }
+    .rchip-pass { background: #c6f6d5; color: #276749; border: 1px solid #38a169; }
+    .rchip-warn { background: #fefcbf; color: #744210; border: 1px solid #d69e2e; }
+    .rchip-fail { background: #fed7d7; color: #742a2a; border: 1px solid #e53e3e; }
+    .rchip-skip { background: #e2e8f0; color: #4a5568; border: 1px solid #a0aec0; }
 
     /* ── Section count badges ── */
-    .section-counts {{ display: flex; gap: .35rem; margin-left: auto; flex-shrink: 0; align-items: center; }}
-    .scnt {{ padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: .01em; }}
-    .scnt-pass {{ background: #d4edda; color: #145a32; }}
-    .scnt-warn {{ background: #fff3cd; color: #7d6008; }}
-    .scnt-fail {{ background: #f8d7da; color: #7b241c; }}
-    .scnt-skip {{ background: #f5f7fa; color: #7f8c8d; }}
+    .section-counts { display: flex; gap: .35rem; margin-left: auto; flex-shrink: 0; align-items: center; }
+    .scnt { padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: .01em; }
+    .scnt-pass { background: #d4edda; color: #145a32; }
+    .scnt-warn { background: #fff3cd; color: #7d6008; }
+    .scnt-fail { background: #f8d7da; color: #7b241c; }
+    .scnt-skip { background: #f5f7fa; color: #7f8c8d; }
 
     /* ── Test block status left border ── */
-    .test-block.tb-fail {{ border-left: 4px solid #e53e3e; }}
-    .test-block.tb-warn {{ border-left: 4px solid #d69e2e; }}
-    .test-block.tb-pass {{ border-left: 4px solid #38a169; }}
+    .test-block.tb-fail { border-left: 4px solid #e53e3e; }
+    .test-block.tb-warn { border-left: 4px solid #d69e2e; }
+    .test-block.tb-pass { border-left: 4px solid #38a169; }
+"""
 
-    /* Configuration toggle */
-    .btn-config {{
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 4px 12px; border-radius: 5px; cursor: pointer;
-      font-size: 11px; font-weight: 600; border: none;
-      background: #0d6efd; color: #fff;
-      transition: background 0.15s; user-select: none;
-      margin-bottom: 6px;
-    }}
-    .btn-config:hover {{ background: #0b5ed7; }}
-    .config-panel {{ display: none; }}
-    .config-panel.open {{ display: block; }}
-    .config-table {{
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-      margin-top: 6px;
-    }}
-    .config-table tr:nth-child(even) td {{ background: #f5f7fa; }}
-    .config-table tr:nth-child(odd) td {{ background: #ffffff; }}
-    .config-table td {{
-      padding: 5px 8px;
-      border: 1px solid #dde3ec;
-      vertical-align: top;
-      word-break: break-all;
-      color: #333;
-    }}
-    .config-table td:first-child {{
-      font-weight: 700;
-      color: #1a3a5c;
-      white-space: nowrap;
-      width: 45%;
-      background: #eef4fb;
-    }}
-    .config-table td:last-child {{
-      font-weight: 400;
-      color: #444;
-    }}
+_RUCC_EXTRA_JS = r"""
 
-    @media (max-width: 860px) {{
-      .nav-hamburger {{ display: flex; }}
-      .top-nav-search-wrap {{ width: 240px; }}
-      .top-nav-meta {{ display: none; }}
-      .sidebar {{
-        position: fixed;
-        left: -300px;
-        top: 56px;
-        height: calc(100vh - 56px);
-      }}
-      .sidebar.open {{ left: 0; }}
-      .main-content {{ width: 100%; }}
-    }}
-    @media (max-width: 540px) {{
-      .top-nav {{ padding: 0 10px; gap: 8px; }}
-      .top-nav img {{ height: 28px; }}
-      .nav-brand {{ display: none; }}
-      .top-nav-search-wrap {{ width: 180px; }}
-    }}
-  </style>
-</head>
-<body>
-
-<nav class="top-nav">
-  <button class="nav-hamburger" id="hamburgerBtn" onclick="toggleSidebar()" title="Menu">&#9776;</button>
-  <img alt="DMTF Redfish Logo" src="data:image/gif;base64,{}"/>
-  <div class="nav-brand">
-    <div class="top-nav-title">Redfish Use Case Checkers</div>
-    <div class="top-nav-sub">Test Report</div>
-  </div>
-  <div class="top-nav-search-wrap">
-    <div class="nav-filter-wrap">
-      <span class="fi">&#8260;</span>
-      <input id="uriFilter" type="text" placeholder="Filter by Use Case&hellip;" autocomplete="off"/>
-      <button id="filterClear" onclick="clearFilter()" title="Clear">&#10005;</button>
-    </div>
-    <div class="nav-filter-meta">Showing <b id="filterCount">&#8230;</b> test blocks</div>
-  </div>
-  <div class="top-nav-meta">
-    Version: {} &nbsp;|&nbsp; Generated: {}<br/>
-    <a href="https://github.com/DMTF/Redfish-Use-Case-Checkers" target="_blank">DMTF/Redfish-Use-Case-Checkers</a>
-  </div>
-</nav>
-
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-<div class="app-shell">
-
-  <aside class="sidebar">
-
-    <!-- System Info -->
-    <div class="sidebar-section">
-      <div class="sidebar-label">System Under Test</div>
-      <table class="sys-table">
-        <tr><td>Host</td><td>{}</td></tr>
-        <tr><td>User</td><td>{}</td></tr>
-        <tr><td>Password</td><td>{}</td></tr>
-        <tr><td>Product</td><td>{}</td></tr>
-        <tr><td>Manufacturer</td><td>{}</td></tr>
-        <tr><td>Model</td><td>{}</td></tr>
-        <tr><td>Firmware</td><td>{}</td></tr>
-      </table>
-    </div>
-
-    <!-- Score tiles -->
-    <div class="sidebar-section">
-      <div class="sidebar-label">Results Summary</div>
-      <div class="score-grid">
-        <div class="score-tile st-pass"><div class="snum">{}</div><div class="slbl">&#10003; Pass</div></div>
-        <div class="score-tile st-warn"><div class="snum">{}</div><div class="slbl">&#9888; Warning</div></div>
-        <div class="score-tile st-fail"><div class="snum">{}</div><div class="slbl">&#10007; Fail</div></div>
-        <div class="score-tile st-skip"><div class="snum">{}</div><div class="slbl">&#8212; Not Tested</div></div>
-      </div>
-    </div>
-
-    <!-- Configuration -->
-    <div class="sidebar-section">
-      <div class="sidebar-label">Configuration</div>
-      <span class="btn-config" id="btnConfig"
-        onclick="(function(){{var p=document.getElementById('configPanel'),b=document.getElementById('btnConfig');if(p.classList.contains('open')){{p.classList.remove('open');b.innerHTML='&#9881; Show Configuration';}}else{{p.classList.add('open');b.innerHTML='&#9650; Hide Configuration';}}}})()">
-        &#9881; Show Configuration
-      </span>
-      <div class="config-panel" id="configPanel">
-        <table class="config-table">
-          {}
-        </table>
-      </div>
-    </div>
-
-  </aside>
-
-  <div class="main-content">
-    <div class="toolbar">
-      <button class="toolbar-btn" onclick="expandAll()">&#9660;&nbsp; Expand All</button>
-      <button class="toolbar-btn" onclick="collapseAll()">&#9654;&nbsp; Collapse All</button>
-    </div>
-
-    {}
-
-  </div>
-
-</div><!-- /app-shell -->
-
-<button id="scrollTopBtn" title="Back to top"
-  onclick="document.querySelector('.main-content').scrollTo({{top:0,behavior:'smooth'}})">
-  &#8679;
-</button>
-
-<script>
   /* Section collapse/expand */
-  document.querySelectorAll('.section-header').forEach(function(hdr) {{
-    hdr.addEventListener('click', function() {{
+  document.querySelectorAll('.section-header').forEach(function(hdr) {
+    hdr.addEventListener('click', function() {
       this.classList.toggle('collapsed');
       var body = this.nextElementSibling;
       body.style.display = (body.style.display === 'none') ? '' : 'none';
-    }});
-  }});
+    });
+  });
 
   /* Test row collapse/expand */
-  document.querySelectorAll('.test-heading').forEach(function(hdr) {{
-    hdr.addEventListener('click', function() {{
+  document.querySelectorAll('.test-heading').forEach(function(hdr) {
+    hdr.addEventListener('click', function() {
       var body = this.nextElementSibling;
       var arrow = this.querySelector('.test-toggle');
-      if (body && body.classList.contains('test-body')) {{
+      if (body && body.classList.contains('test-body')) {
         var hidden = body.classList.toggle('hidden');
         if (arrow) arrow.style.transform = hidden ? 'rotate(-90deg)' : '';
-      }}
-    }});
-  }});
+      }
+    });
+  });
 
   /* Expand all */
-  function expandAll() {{
-    document.querySelectorAll('.section-header').forEach(function(hdr) {{
+  function expandAll() {
+    document.querySelectorAll('.section-header').forEach(function(hdr) {
       hdr.classList.remove('collapsed');
       hdr.nextElementSibling.style.display = '';
-    }});
-    document.querySelectorAll('.test-body').forEach(function(b) {{
+    });
+    document.querySelectorAll('.test-body').forEach(function(b) {
       b.classList.remove('hidden');
-    }});
-    document.querySelectorAll('.test-toggle').forEach(function(a) {{
+    });
+    document.querySelectorAll('.test-toggle').forEach(function(a) {
       a.style.transform = '';
-    }});
-  }}
+    });
+  }
 
   /* Collapse all */
-  function collapseAll() {{
-    document.querySelectorAll('.section-header').forEach(function(hdr) {{
+  function collapseAll() {
+    document.querySelectorAll('.section-header').forEach(function(hdr) {
       hdr.classList.add('collapsed');
       hdr.nextElementSibling.style.display = 'none';
-    }});
-    document.querySelectorAll('.test-body').forEach(function(b) {{
+    });
+    document.querySelectorAll('.test-body').forEach(function(b) {
       b.classList.add('hidden');
-    }});
-    document.querySelectorAll('.test-toggle').forEach(function(a) {{
+    });
+    document.querySelectorAll('.test-toggle').forEach(function(a) {
       a.style.transform = 'rotate(-90deg)';
-    }});
-  }}
-
-  /* Scroll-to-top button */
-  document.querySelector('.main-content').addEventListener('scroll', function() {{
-    document.getElementById('scrollTopBtn').style.display =
-      this.scrollTop > 200 ? 'block' : 'none';
-  }});
+    });
+  }
 
   /* URI filter */
-  (function() {{
+  (function() {
     var filter = document.getElementById('uriFilter');
     var clearBtn = document.getElementById('filterClear');
     var countEl = document.getElementById('filterCount');
     if (!filter) return;
 
-    function updateCount() {{
+    function updateCount() {
       var allTests = document.querySelectorAll('.test-block').length;
       var visibleTests = 0;
-      document.querySelectorAll('.test-block').forEach(function(tb) {{
+      document.querySelectorAll('.test-block').forEach(function(tb) {
         if (tb.style.display !== 'none') visibleTests += 1;
-      }});
+      });
       if (countEl) countEl.innerHTML = '<b>' + visibleTests + '</b> / ' + allTests;
       if (clearBtn) clearBtn.style.display = filter.value.trim() ? 'block' : 'none';
-    }}
+    }
 
-    filter.addEventListener('input', function() {{
+    filter.addEventListener('input', function() {
       var q = (this.value || '').toLowerCase().trim();
       var sections = document.querySelectorAll('.section');
 
-      sections.forEach(function(section) {{
+      sections.forEach(function(section) {
         var sectionHdr = section.querySelector('.section-header');
         var testBlocks = section.querySelectorAll('.test-block');
         var sectionMatches = false;
 
-        testBlocks.forEach(function(tb) {{
+        testBlocks.forEach(function(tb) {
           var heading = tb.querySelector('.test-heading');
           var txt = heading ? heading.textContent.toLowerCase() : '';
           var match = !q || txt.indexOf(q) !== -1;
           tb.style.display = match ? '' : 'none';
           if (match) sectionMatches = true;
-        }});
+        });
 
-        if (sectionHdr && !sectionMatches && q) {{
+        if (sectionHdr && !sectionMatches && q) {
           var secTxt = sectionHdr.textContent.toLowerCase();
-          if (secTxt.indexOf(q) !== -1) {{
+          if (secTxt.indexOf(q) !== -1) {
             sectionMatches = true;
-            testBlocks.forEach(function(tb) {{ tb.style.display = ''; }});
-          }}
-        }}
+            testBlocks.forEach(function(tb) { tb.style.display = ''; });
+          }
+        }
 
         section.style.display = sectionMatches || !q ? '' : 'none';
-      }});
+      });
 
       updateCount();
-    }});
+    });
 
     updateCount();
-  }})();
+  })();
 
-  /* Mobile sidebar toggle */
-  function toggleSidebar() {{
-    var sb = document.querySelector('.sidebar');
-    var ov = document.getElementById('sidebarOverlay');
-    var open = sb.classList.toggle('open');
-    ov.classList.toggle('show', open);
-  }}
-
-  function clearFilter() {{
+  function clearFilter() {
     document.getElementById('uriFilter').value = '';
     document.getElementById('uriFilter').dispatchEvent(new Event('input'));
-  }}
-</script>
-
-</body>
-</html>
+  }
 """
+
+# ── Placeholder kept for any external code that may reference this name ──
+html_template = None
 
 
 def html_report(sut: SystemUnderTest, report_dir, time, tool_version, args=None):
@@ -762,25 +375,41 @@ def html_report(sut: SystemUnderTest, report_dir, time, tool_version, args=None)
                 html_mod.escape(key), html_mod.escape(val)
             )
 
+    main_prefix = (
+        '<div class="toolbar">'
+        '<button class="toolbar-btn" onclick="expandAll()">&#9660;&nbsp; Expand All</button>'
+        '<button class="toolbar-btn" onclick="collapseAll()">&#9654;&nbsp; Collapse All</button>'
+        '</div>'
+    )
+
     with open(str(file), "w", encoding="utf-8") as fd:
         fd.write(
-            html_template.format(
-                redfish_logo.logo,
-                tool_version,
-                time.strftime("%c"),
-                sut.rhost,
-                sut.username,
-                "********",
-                sut.product,
-                sut.manufacturer,
-                sut.model,
-                sut.firmware_version,
-                sut.pass_count,
-                sut.warn_count,
-                sut.fail_count,
-                sut.skip_count,
-                config_rows_html,
-                html,
+            build_html_report(
+                page_title="Redfish Use Case Checkers \u2014 Test Report",
+                tool_title="Redfish Use Case Checkers",
+                filter_placeholder="Filter by Use Case\u2026",
+                filter_count_label="test blocks",
+                tool_link="https://github.com/DMTF/Redfish-Use-Case-Checkers",
+                tool_repo="DMTF/Redfish-Use-Case-Checkers",
+                tool_version=tool_version,
+                generated_time=time.strftime("%c"),
+                sut_host=html_mod.escape(str(sut.rhost)),
+                sut_user=html_mod.escape(str(sut.username)),
+                sut_password="********",
+                sut_product=html_mod.escape(str(sut.product)),
+                sut_manufacturer=html_mod.escape(str(sut.manufacturer)),
+                sut_model=html_mod.escape(str(sut.model)),
+                sut_firmware=html_mod.escape(str(sut.firmware_version)),
+                pass_count=sut.pass_count,
+                warn_count=sut.warn_count,
+                fail_count=sut.fail_count,
+                skip_count=sut.skip_count,
+                sidebar_extra_html="",
+                config_rows_html=config_rows_html,
+                extra_css=_RUCC_EXTRA_CSS,
+                main_prefix_html=main_prefix,
+                main_content_html=html,
+                extra_js=_RUCC_EXTRA_JS,
             )
         )
     return file
