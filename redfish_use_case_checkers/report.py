@@ -929,9 +929,9 @@ def xlsx_report(sut: SystemUnderTest, report_dir, time, tool_version):
     # ── Results sheet ────────────────────────────────────────────────────────
     ws = wb.create_sheet("Results")
 
-    # Column definitions: Category | Test Name | Description | Operation | Result | Message | HTTP Evidence
-    col_headers = ["Category", "Test Name", "Description", "Operation", "Result", "Message", "HTTP Evidence"]
-    col_widths   = [22, 28, 40, 40, 12, 55, 80]
+    # Column definitions: Category | Test Name | Description | Operation | Result | Message
+    col_headers = ["Category", "Test Name", "Description", "Operation", "Result", "Message"]
+    col_widths   = [22, 28, 40, 40, 12, 55]
 
     for col, (hdr, width) in enumerate(zip(col_headers, col_widths), start=1):
         _cell(ws, 1, col, hdr, bold=True, color=HDR_FONT,
@@ -960,11 +960,6 @@ def xlsx_report(sut: SystemUnderTest, report_dir, time, tool_version):
                 operation = result["Operation"] or "No testing performed"
                 result_val = result["Result"] or "N/A"
                 message = result["Message"]
-                result_exchanges = result.get("Exchanges") or ([result["Exchange"]] if result.get("Exchange") else [])
-                evidence = "\n\n".join(
-                  "HTTP call {}\n{}".format(index, _json_text(exchange))
-                  for index, exchange in enumerate(result_exchanges, start=1)
-                ) or "No HTTP exchange"
 
                 fill, fnt = result_style.get(result_val, (SKIP_FILL, SKIP_FONT))
 
@@ -975,7 +970,6 @@ def xlsx_report(sut: SystemUnderTest, report_dir, time, tool_version):
                 _cell(ws, row, 5, result_val,  fill_hex=fill, color=fnt,
                       bold=True, align="center")
                 _cell(ws, row, 6, message,     wrap=True)
-                _cell(ws, row, 7, evidence,     wrap=True)
                 ws.row_dimensions[row].height = 30
                 row += 1
 
