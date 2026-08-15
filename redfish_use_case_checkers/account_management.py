@@ -13,7 +13,6 @@ Brief : This file contains the definitions and functionalities for testing
 
 import logging
 import re
-import redfish
 import redfish_utilities
 
 from redfish_use_case_checkers.system_under_test import SystemUnderTest
@@ -382,7 +381,7 @@ def acc_test_credential_check(sut: SystemUnderTest, user_added: bool, username: 
     # Log in with the new user
     operation = "Logging in as '{}' with the correct password".format(username)
     logger.logger.info(operation)
-    test_obj = redfish.redfish_client(base_url=sut.rhost, username=username, password=password)
+    test_obj = sut.new_session(username, password)
     try:
         test_obj.login(auth="session")
         test_list = redfish_utilities.get_users(test_obj)
@@ -400,7 +399,7 @@ def acc_test_credential_check(sut: SystemUnderTest, user_added: bool, username: 
     # Log in with the new user, but with bad credentials
     operation = "Logging in as '{}', but with the incorrect password".format(username)
     logger.logger.info(operation)
-    test_obj = redfish.redfish_client(base_url=sut.rhost, username=username, password=password + "ExtraStuff")
+    test_obj = sut.new_session(username, password + "ExtraStuff")
     try:
         test_obj.login(auth="session")
         test_list = redfish_utilities.get_users(test_obj)
