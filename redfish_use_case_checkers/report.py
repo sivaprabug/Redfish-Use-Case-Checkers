@@ -104,7 +104,9 @@ _RUCC_EXTRA_CSS = r"""
     .uri-summary-table td { border-top: 1px solid #e1e7ef; color: #23395d; padding: 7px 10px; vertical-align: middle; }
     .uri-summary-table .uri-number { font-family: "Cascadia Code", "Consolas", monospace; white-space: nowrap; width: 10%; }
     .uri-summary-table .uri-method { font-weight: 700; width: 10%; }
-    .uri-summary-table .uri-status { font-weight: 700; width: 13%; }
+    .uri-summary-table .uri-status { font-weight: 700; width: 11%; }
+    .uri-summary-table .uri-response-time { white-space: nowrap; width: 11%; }
+    .uri-summary-table .uri-response-size { white-space: nowrap; width: 11%; }
     .uri-summary-table .uri-url { overflow-wrap: anywhere; }
     .uri-summary-row { cursor: pointer; }
     .uri-summary-row:hover td { background: #edf3ff; }
@@ -741,66 +743,79 @@ def _format_http_request(request_dict, payload=None):
     # HTTP request line: METHOD PATH HTTP/1.1
     lines.append("{} {} HTTP/1.1".format(method, path))
     
+    lines.append("")
+    lines.append("Headers:")
+
     # List every header (sorted for stable output)
     headers = request_dict.get("headers", {})
     if isinstance(headers, dict):
         for key in sorted(headers, key=str.lower):
             value = headers[key]
             if value is not None:
-                lines.append("{}: {}".format(key, value))
+                lines.append("{}: {}".format(_display_header_name(key), value))
     
-    # Add blank line separator
     lines.append("")
     
     # Add payload if present
     if payload not in (None, "", {}, []):
+        lines.append("Body Request of {}:".format(path))
         lines.append(_json_text(payload))
     
     return "\n".join(lines)
 
 
-def _format_http_response(response_dict, response_data=None):
-    """Format response as HTTP status line + all headers + body."""
-    if not isinstance(response_dict, dict):
-        return str(response_dict)  # Handle error cases
-    
-    lines = []
-    status = response_dict.get("status", 200)
-    status_text = response_dict.get("statusText")
-    if not status_text:
-        try:
-            status_text = http.HTTPStatus(int(status)).phrase
-        except (ValueError, TypeError):
-            status_text = ""
-    
-    # HTTP status line: HTTP/1.1 STATUS STATUSTEXT
-    lines.append("HTTP/1.1 {} {}".format(status, status_text).rstrip())
-    
-    # Extract actual headers dict (it's nested inside response_dict)
-    headers = response_dict.get("headers", {})
-    if not isinstance(headers, dict):
-        headers = {}
-    
-    # List every header (sorted for stable output)
+def _format_http_response(response_dict, response_data=None, request_url=""):
+  """Format response as HTTP status line, headers, and body."""
+  if not isinstance(response_dict, dict):
+    return str(response_dict)
+
+  status = response_dict.get("status", 200)
+  status_text = response_dict.get("statusText")
+  if not status_text:
+    try:
+      status_text = http.HTTPStatus(int(status)).phrase
+    except (ValueError, TypeError):
+      status_text = ""
+
+  lines = ["HTTP/1.1 {} {}".format(status, status_text).rstrip(), "", "Headers:"]
+  headers = response_dict.get("headers", {})
+  if isinstance(headers, dict):
     for key in sorted(headers, key=str.lower):
-        value = headers[key]
-        if value is not None:
-            lines.append("{}: {}".format(key, value))
-    
-    # Add blank line separator
-    lines.append("")
-    
-    # Add response body if present
-    if response_data not in (None, "", {}, []):
-        lines.append(_json_text(response_data))
-    
-    return "\n".join(lines)
+      value = headers[key]
+      if value is not None:
+        lines.append("{}: {}".format(_display_header_name(key), value))
+
+  if response_data not in (None, "", {}, []):
+    lines.extend(("", "Body Response of {}:".format(_request_path(request_url)), _json_text(response_data)))
+
+  return "\n".join(lines)
+
+
+def _display_header_name(name):
+    """Return conventional HTTP header capitalization for report output."""
+    canonical_names = {
+        "etag": "ETag",
+        "odata-version": "OData-Version",
+    }
+    normalized_name = str(name).lower()
+    return canonical_names.get(
+        normalized_name,
+        "-".join(part.capitalize() for part in normalized_name.split("-")),
+    )
+
+
+def _request_path(url):
+    """Return the path and query portion of a request URL."""
+    from urllib.parse import urlparse
+    parsed = urlparse(url)
+    path = parsed.path or "/"
+    return "{}{}".format(path, "?" + parsed.query if parsed.query else "")
 
 
 def _uri_summary_table(exchanges, category_index, test_index):
   html = (
     '<table class="uri-summary-table">'
-    '<thead><tr><th>S#</th><th>URI</th><th>METHOD</th><th>STATUS CODE</th></tr></thead><tbody>'
+    '<thead><tr><th>S#</th><th>URI</th><th>METHOD</th><th>STATUS CODE</th><th>RESPONSE TIME</th><th>RESPONSE SIZE</th></tr></thead><tbody>'
   )
   for uri_index, exchange in enumerate(exchanges, start=1):
     response = exchange.get("Response") or {}
@@ -813,14 +828,19 @@ def _uri_summary_table(exchanges, category_index, test_index):
       status_class = "status-default"
     if status_class not in ("status-2xx", "status-3xx", "status-4xx", "status-5xx"):
       status_class = "status-default"
+    response_time_ms = response.get("response_time_ms")
+    response_time = "N/A" if response_time_ms is None else "{:.0f} ms".format(response_time_ms)
+    response_size_bytes = response.get("response_size_bytes")
+    response_size = "N/A" if response_size_bytes is None else "{:.2f} KB".format(response_size_bytes / 1024)
     exchange_index = "{}.{}.{}".format(category_index, test_index, uri_index)
     detail_id = "uri-detail-{}".format(exchange_index.replace(".", "-"))
     html += (
             '<tr class="uri-summary-row" onclick="toggleUriRow(\'{}\', this)">'
             '<td class="uri-number"><span class="uri-row-arrow">&#9654;</span> {}.{}.{} </td><td class="uri-url">{}</td>'
           '<td class="uri-method"><span class="uri-method-badge {}">{}</span></td>'
-          '<td class="uri-status"><span class="uri-status-badge {}">{}</span></td></tr>'
-      '<tr id="{}" class="uri-detail-row"><td colspan="4">{}</td></tr>'
+            '<td class="uri-status"><span class="uri-status-badge {}">{}</span></td>'
+            '<td class="uri-response-time">{}</td><td class="uri-response-size">{}</td></tr>'
+          '<tr id="{}" class="uri-detail-row"><td colspan="6">{}</td></tr>'
     ).format(
       detail_id,
       category_index,
@@ -831,6 +851,8 @@ def _uri_summary_table(exchanges, category_index, test_index):
       html_mod.escape(str(exchange.get("method", "")).upper()),
       status_class,
       html_mod.escape(str(status)),
+      html_mod.escape(response_time),
+      html_mod.escape(response_size),
       detail_id,
       _exchange_html(exchange, exchange_index, expanded=False),
     )
@@ -848,7 +870,9 @@ def _exchange_html(exchange, exchange_index, expanded=False):
     sections = {
         "request": _format_http_request(request, request_payload),
         "request-payload": request_payload,
-      "response": _format_http_response(response_details, response_data) if response_details else "",
+        "response": _format_http_response(
+          response_details, response_data, exchange.get("url", "")
+        ) if response_details else "",
         "response-data": response_data,
     }
     expanded_class = " expanded" if expanded else ""

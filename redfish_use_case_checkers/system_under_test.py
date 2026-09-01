@@ -3,6 +3,7 @@
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Use-Case-Checkers/blob/main/LICENSE.md
 
 import json
+import time
 from urllib.parse import urljoin
 
 import redfish
@@ -29,9 +30,12 @@ class _CapturedSession(object):
             exchange = self._request(name, args, kwargs)
             self._sut._api_call_count += 1
             logger.log_api_call(exchange)
+            started_at = time.monotonic()
             try:
                 response = attribute(*args, **kwargs)
-                exchange["Response"] = self._response_data(response)
+                exchange["Response"] = self._response_data(
+                    response, (time.monotonic() - started_at) * 1000
+                )
                 return response
             except Exception as err:
                 exchange["Error"] = str(err)
@@ -90,7 +94,7 @@ class _CapturedSession(object):
             return str(value)
 
     @classmethod
-    def _response_data(cls, response):
+    def _response_data(cls, response, response_time_ms=None):
         response_headers = getattr(response, "headers", None)
         if not response_headers and hasattr(response, "getheaders"):
             response_headers = response.getheaders()
@@ -122,6 +126,9 @@ class _CapturedSession(object):
             "headers": response_headers,
             "data": cls._json_value(data),
         }
+        if response_time_ms is not None:
+            response_data["response_time_ms"] = response_time_ms
+        response_data["response_size_bytes"] = cls._response_size_bytes(response_headers, data, body)
         for field in ("url", "elapsed", "http_version", "version", "encoding"):
             value = getattr(response, field, None)
             if value is not None:
@@ -129,6 +136,19 @@ class _CapturedSession(object):
         if body is not None and data is None:
             response_data["body"] = cls._json_value(body)
         return response_data
+
+    @staticmethod
+    def _response_size_bytes(headers, data, body):
+        content_length = headers.get("content-length") if isinstance(headers, dict) else None
+        try:
+            return int(content_length)
+        except (TypeError, ValueError):
+            pass
+        if body is not None:
+            return len(str(body).encode("utf-8"))
+        if data is not None:
+            return len(json.dumps(data, default=str).encode("utf-8"))
+        return 0
 
 
 class SystemUnderTest(object):
