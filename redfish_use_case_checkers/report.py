@@ -3,6 +3,7 @@
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Use-Case-Checkers/blob/main/LICENSE.md
 
 import html as html_mod
+import http
 import json
 from datetime import datetime
 
@@ -127,6 +128,8 @@ _RUCC_EXTRA_CSS = r"""
     .uri-detail-row > td { background: #f8fafc; padding: 0 8px 6px; }
     .uri-detail-row .evidence-call { margin: 0; }
     .uri-detail-row .evidence-call-label { display: none; }
+    /* the row itself is the toggle here, so always show the buttons/body once the row is open */
+    .uri-detail-row .evidence-call-body { display: block; }
     .evidence-buttons { align-items: center; display: flex; flex-wrap: wrap; gap: 7px; }
     .evidence-button {
       align-items: center; background: #fff; border: 1px solid #c7d8f5; border-radius: 5px;
@@ -248,6 +251,17 @@ _RUCC_EXTRA_JS = r"""
     });
   });
 
+  /* Reset any 'Collapse All' buttons back to 'Expand All' once an item is manually collapsed,
+     so the buttons never claim everything is expanded when it isn't. */
+  function resetExpandButtonsIfCollapsed(scopeEl, collapsed) {
+    if (!collapsed) return;
+    var topButton = document.querySelector('.toolbar > .toolbar-btn');
+    if (topButton) setToggleLabel(topButton, false);
+    var section = scopeEl && scopeEl.closest('.section');
+    var sectionButton = section && section.querySelector('.section-toolbar .toolbar-btn');
+    if (sectionButton) setToggleLabel(sectionButton, false);
+  }
+
   /* Test row collapse/expand */
   document.querySelectorAll('.test-heading').forEach(function(hdr) {
     hdr.addEventListener('click', function() {
@@ -256,6 +270,7 @@ _RUCC_EXTRA_JS = r"""
       if (body && body.classList.contains('test-body')) {
         var hidden = body.classList.toggle('hidden');
         if (arrow) arrow.style.transform = hidden ? 'rotate(-90deg)' : '';
+        resetExpandButtonsIfCollapsed(this, hidden);
       }
     });
   });
@@ -271,12 +286,6 @@ _RUCC_EXTRA_JS = r"""
     });
     document.querySelectorAll('.test-toggle').forEach(function(a) {
       a.style.transform = '';
-    });
-    document.querySelectorAll('.evidence-call').forEach(function(call) {
-      call.classList.add('expanded');
-    });
-    document.querySelectorAll('.uri-detail-row').forEach(function(row) {
-      row.classList.add('open');
     });
     document.querySelectorAll('.section-toolbar .toolbar-btn').forEach(function(button) {
       setToggleLabel(button, true);
@@ -295,11 +304,9 @@ _RUCC_EXTRA_JS = r"""
     document.querySelectorAll('.test-toggle').forEach(function(a) {
       a.style.transform = 'rotate(-90deg)';
     });
-    document.querySelectorAll('.evidence-call').forEach(function(call) {
-      call.classList.remove('expanded');
-    });
     document.querySelectorAll('.uri-detail-row').forEach(function(row) {
       row.classList.remove('open');
+      if (row.previousElementSibling) row.previousElementSibling.classList.remove('uri-row-open');
     });
     document.querySelectorAll('.section-toolbar .toolbar-btn').forEach(function(button) {
       setToggleLabel(button, false);
@@ -490,8 +497,9 @@ _RUCC_EXTRA_JS = r"""
   function toggleUriRow(rowId, row) {
     var detail = document.getElementById(rowId);
     if (!detail) return;
-    detail.classList.toggle('open');
+    var open = detail.classList.toggle('open');
     row.classList.toggle('uri-row-open');
+    resetExpandButtonsIfCollapsed(row, !open);
   }
 
   function expandSection(section) {
@@ -500,12 +508,6 @@ _RUCC_EXTRA_JS = r"""
     });
     section.querySelectorAll('.test-toggle').forEach(function(arrow) {
       arrow.style.transform = '';
-    });
-    section.querySelectorAll('.evidence-call').forEach(function(call) {
-      call.classList.add('expanded');
-    });
-    section.querySelectorAll('.uri-detail-row').forEach(function(row) {
-      row.classList.add('open');
     });
   }
 
@@ -516,11 +518,9 @@ _RUCC_EXTRA_JS = r"""
     section.querySelectorAll('.test-toggle').forEach(function(arrow) {
       arrow.style.transform = 'rotate(-90deg)';
     });
-    section.querySelectorAll('.evidence-call').forEach(function(call) {
-      call.classList.remove('expanded');
-    });
     section.querySelectorAll('.uri-detail-row').forEach(function(row) {
       row.classList.remove('open');
+      if (row.previousElementSibling) row.previousElementSibling.classList.remove('uri-row-open');
     });
   }
 
@@ -725,6 +725,78 @@ def _json_text(value):
     return json.dumps(value, indent=2, sort_keys=True, default=str)
 
 
+def _format_http_request(request_dict, payload=None):
+    """Format request as HTTP request line + all headers + payload."""
+    lines = []
+    method = request_dict.get("method", "GET").upper()
+    url = request_dict.get("url", "/")
+    
+    # Extract path + query from full URL
+    from urllib.parse import urlparse
+    parsed = urlparse(url)
+    path = parsed.path or "/"
+    if parsed.query:
+        path += "?" + parsed.query
+    
+    # HTTP request line: METHOD PATH HTTP/1.1
+    lines.append("{} {} HTTP/1.1".format(method, path))
+    
+    # List every header (sorted for stable output)
+    headers = request_dict.get("headers", {})
+    if isinstance(headers, dict):
+        for key in sorted(headers, key=str.lower):
+            value = headers[key]
+            if value is not None:
+                lines.append("{}: {}".format(key, value))
+    
+    # Add blank line separator
+    lines.append("")
+    
+    # Add payload if present
+    if payload not in (None, "", {}, []):
+        lines.append(_json_text(payload))
+    
+    return "\n".join(lines)
+
+
+def _format_http_response(response_dict, response_data=None):
+    """Format response as HTTP status line + all headers + body."""
+    if not isinstance(response_dict, dict):
+        return str(response_dict)  # Handle error cases
+    
+    lines = []
+    status = response_dict.get("status", 200)
+    status_text = response_dict.get("statusText")
+    if not status_text:
+        try:
+            status_text = http.HTTPStatus(int(status)).phrase
+        except (ValueError, TypeError):
+            status_text = ""
+    
+    # HTTP status line: HTTP/1.1 STATUS STATUSTEXT
+    lines.append("HTTP/1.1 {} {}".format(status, status_text).rstrip())
+    
+    # Extract actual headers dict (it's nested inside response_dict)
+    headers = response_dict.get("headers", {})
+    if not isinstance(headers, dict):
+        headers = {}
+    
+    # List every header (sorted for stable output)
+    for key in sorted(headers, key=str.lower):
+        value = headers[key]
+        if value is not None:
+            lines.append("{}: {}".format(key, value))
+    
+    # Add blank line separator
+    lines.append("")
+    
+    # Add response body if present
+    if response_data not in (None, "", {}, []):
+        lines.append(_json_text(response_data))
+    
+    return "\n".join(lines)
+
+
 def _uri_summary_table(exchanges, category_index, test_index):
   html = (
     '<table class="uri-summary-table">'
@@ -760,7 +832,7 @@ def _uri_summary_table(exchanges, category_index, test_index):
       status_class,
       html_mod.escape(str(status)),
       detail_id,
-      _exchange_html(exchange, exchange_index, expanded=True),
+      _exchange_html(exchange, exchange_index, expanded=False),
     )
   return html + '</tbody></table>'
 
@@ -772,11 +844,12 @@ def _exchange_html(exchange, exchange_index, expanded=False):
     response_details = {
       key: value for key, value in response.items() if key not in ("data", "body")
     }
+    response_data = response.get("data") if response else exchange.get("Error", "")
     sections = {
-        "request": request,
+        "request": _format_http_request(request, request_payload),
         "request-payload": request_payload,
-      "response": response_details,
-        "response-data": response.get("data") if response else exchange.get("Error", ""),
+      "response": _format_http_response(response_details, response_data) if response_details else "",
+        "response-data": response_data,
     }
     expanded_class = " expanded" if expanded else ""
     html = '<div class="evidence-call{}">'.format(expanded_class)
@@ -787,13 +860,10 @@ def _exchange_html(exchange, exchange_index, expanded=False):
       html_mod.escape(str(exchange.get("url", ""))),
     )
     html += '<div class="evidence-call-body"><div class="evidence-buttons">'
-    evidence_views = [("Request", "request")]
-    if request_payload not in (None, "", {}, []):
-      evidence_views.append(("Request Payload", "request-payload"))
-    evidence_views.extend([
+    evidence_views = [
+      ("Request", "request"),
       ("Response", "response"),
-      ("Response data", "response-data"),
-    ])
+    ]
     for name, key in evidence_views:
         panel_id = "evidence-{}-{}".format(exchange_index, key)
         html += '<button class="evidence-button evidence-view-{}" title="Show {} details" onclick="showEvidence(\'{}\', this)">{}</button>'.format(
@@ -804,8 +874,14 @@ def _exchange_html(exchange, exchange_index, expanded=False):
     html += '</div>'
     for key, value in sections.items():
         panel_id = "evidence-{}-{}".format(exchange_index, key)
+        # For "request" and "response", use the formatted string directly
+        # For "request-payload" and "response-data", format as JSON
+        if key in ("request", "response"):
+            formatted_value = value if isinstance(value, str) else _json_text(value)
+        else:
+            formatted_value = _json_text(value)
         html += '<div id="{}" class="evidence-panel"><pre>{}</pre></div>'.format(
-            panel_id, html_mod.escape(_json_text(value))
+            panel_id, html_mod.escape(formatted_value)
         )
     return html + '</div></div>'
 
